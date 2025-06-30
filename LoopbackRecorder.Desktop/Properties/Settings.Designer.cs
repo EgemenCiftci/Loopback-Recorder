@@ -34,10 +34,10 @@ namespace LoopbackRecorder.Desktop.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int SilenceThreshold {
+        [global::System.Configuration.DefaultSettingValueAttribute("0.01")]
+        public float SilenceThreshold {
             get {
-                return ((int)(this["SilenceThreshold"]));
+                return ((float)(this["SilenceThreshold"]));
             }
         }
     }

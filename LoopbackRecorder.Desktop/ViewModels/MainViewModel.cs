@@ -117,14 +117,17 @@ public class MainViewModel : ObservableObject
                         {
                             renderWriter.Dispose();
                             renderCapture.Dispose();
+
                             AppendLog("Render recording stopped.");
 
                             bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
+
                             if (!result)
                             {
                                 AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
                                 format = Formats.Wav;
                             }
+
                             ConvertTo(format, renderFileName);
                             AppendLog($"Converted to AAC format.");
                         }
@@ -138,7 +141,10 @@ public class MainViewModel : ObservableObject
                     {
                         try
                         {
-                            renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                            if (!IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat))
+                            {
+                                renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -165,14 +171,17 @@ public class MainViewModel : ObservableObject
                         {
                             captureWriter.Dispose();
                             captureCapture.Dispose();
+
                             AppendLog("Capture recording stopped.");
 
                             bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
+
                             if (!result)
                             {
                                 AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
                                 format = Formats.Wav;
                             }
+
                             ConvertTo(format, captureFileName);
                             AppendLog($"Converted to AAC format.");
                         }
@@ -186,7 +195,10 @@ public class MainViewModel : ObservableObject
                     {
                         try
                         {
-                            captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                            if (!IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat))
+                            {
+                                captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -230,6 +242,7 @@ public class MainViewModel : ObservableObject
     private static void ConvertTo(Formats format, string waveFilePath)
     {
         using WaveFileReader reader = new(waveFilePath);
+
         switch (format)
         {
             case Formats.Aac:
@@ -242,5 +255,42 @@ public class MainViewModel : ObservableObject
                 MediaFoundationEncoder.EncodeToWma(reader, waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase));
                 break;
         }
+    }
+
+    private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)
+    {
+        int bytesPerSample = format.BitsPerSample / 8;
+        int samples = bytesRecorded / bytesPerSample;
+
+        if (samples == 0)
+        {
+            return true;
+        }
+
+        double sumSquares = 0;
+
+        for (int i = 0; i < bytesRecorded; i += bytesPerSample)
+        {
+            float sample = 0;
+
+            if (format.BitsPerSample == 16)
+            {
+                sample = BitConverter.ToInt16(buffer, i) / 32768f;
+            }
+            else if (format.BitsPerSample == 32)
+            {
+                sample = BitConverter.ToInt32(buffer, i) / 2147483648f;
+            }
+            else if (format.BitsPerSample == 8)
+            {
+                sample = (buffer[i] - 128) / 128f;
+            }
+
+            sumSquares += sample * sample;
+        }
+
+        double rms = Math.Sqrt(sumSquares / samples);
+
+        return rms < Settings.Default.SilenceThreshold;
     }
 }

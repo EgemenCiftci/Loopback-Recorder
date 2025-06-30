@@ -5,8 +5,8 @@
     <Setting Name="OutputFormat" Type="System.String" Scope="Application">
       <Value Profile="(Default)">aac</Value>
     </Setting>
-    <Setting Name="SilenceThreshold" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="SilenceThreshold" Type="System.Single" Scope="Application">
+      <Value Profile="(Default)">0.01</Value>
     </Setting>
   </Settings>
 </SettingsFile>
