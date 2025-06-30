@@ -5,11 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LoopbackRecorder.Desktop"
         xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
-        xmlns:viewmodels="clr-namespace:LoopbackRecorder.Desktop.ViewModels"
+        xmlns:viewmodels="clr-namespace:LoopbackRecorder.Desktop.ViewModels" 
+        xmlns:views="clr-namespace:LoopbackRecorder.Desktop.Views"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel}"
         Title="Loopback Recorder" Height="450" Width="600" WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <DataTemplate x:Key="DeviceTemplate">
+            <TextBlock Text="{Binding FriendlyName, TargetNullValue='None'}"/>
+        </DataTemplate>
+        <DataTemplate x:Key="NoneDeviceTemplate">
+            <TextBlock Text="None"/>
+        </DataTemplate>
+        <views:DeviceTemplateSelector x:Key="DeviceTemplateSelector" DeviceTemplate="{StaticResource DeviceTemplate}" NoneDeviceTemplate="{StaticResource NoneDeviceTemplate}" />
         <LinearGradientBrush x:Key="ComboBox.Static.Background" EndPoint="0,1" StartPoint="0,0">
             <GradientStop Color="#FFF0F0F0" Offset="0.0"/>
             <GradientStop Color="#FFE5E5E5" Offset="1.0"/>
@@ -205,9 +214,20 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0">Render Devices:</Label>
-        <ComboBox Template="{StaticResource ComboBoxTemplate1}" ItemsSource="{Binding RenderDevices}" SelectedItem="{Binding SelectedRenderDevice, Mode=OneWayToSource}" DisplayMemberPath="FriendlyName" Tag="{Binding RenderMasterPeakValue}" Grid.Row="1"/>
+        <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
+                  ItemsSource="{Binding RenderDevices}" 
+                  SelectedItem="{Binding SelectedRenderDevice}" 
+                  SelectedValuePath="FriendlyName"
+                  ItemTemplateSelector="{StaticResource DeviceTemplateSelector}" 
+                  Tag="{Binding RenderMasterPeakValue}" 
+                  Grid.Row="1"/>
         <Label Grid.Row="2">Capture Devices:</Label>
-        <ComboBox Template="{StaticResource ComboBoxTemplate1}" ItemsSource="{Binding CaptureDevices}" SelectedItem="{Binding SelectedCaptureDevice, Mode=OneWayToSource}" DisplayMemberPath="FriendlyName" Tag="{Binding CaptureMasterPeakValue}" Grid.Row="3"/>
+        <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
+                  ItemsSource="{Binding CaptureDevices}" 
+                  SelectedItem="{Binding SelectedCaptureDevice}" 
+                  ItemTemplateSelector="{StaticResource DeviceTemplateSelector}" 
+                  Tag="{Binding CaptureMasterPeakValue}"
+                  Grid.Row="3"/>           
         <ToggleButton Command="{Binding StartStopRecordingCommand}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Margin="0,10,0,0" Grid.Row="4" Height="30">
             <ToggleButton.Style>
                 <Style TargetType="ToggleButton">
@@ -230,8 +250,8 @@
                         </Trigger>
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding SelectedRenderDevice}" Value="{x:Null}"/>
-                                <Condition Binding="{Binding SelectedCaptureDevice}" Value="{x:Null}"/>
+                                <Condition Binding="{Binding SelectedRenderDevice.MMDevice}" Value="{x:Null}"/>
+                                <Condition Binding="{Binding SelectedCaptureDevice.MMDevice}" Value="{x:Null}"/>
                             </MultiDataTrigger.Conditions>
                             <Setter Property="IsEnabled" Value="False"/>
                         </MultiDataTrigger>
@@ -239,8 +259,15 @@
                 </Style>
             </ToggleButton.Style>
         </ToggleButton>
-        <ScrollViewer Margin="0,10,0,0" Grid.Row="5">
-            <TextBox Text="{Binding Log}" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
-        </ScrollViewer>
+        <TextBox Grid.Row="5"
+                 Text="{Binding Log}"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 IsReadOnly="True"
+                 Margin="0,10,0,0">
+            <i:Interaction.Behaviors>
+                <views:TextBoxAutoScrollBehavior />
+            </i:Interaction.Behaviors>
+        </TextBox>
     </Grid>
 </Window>

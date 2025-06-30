@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LoopbackRecorder.Desktop.Enums;
+using LoopbackRecorder.Desktop.Models;
 using LoopbackRecorder.Desktop.Properties;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -13,33 +14,33 @@ namespace LoopbackRecorder.Desktop.ViewModels;
 
 public class MainViewModel : ObservableObject
 {
-    private ObservableCollection<MMDevice> renderDevices;
+    private ObservableCollection<Device> renderDevices;
 
-    public ObservableCollection<MMDevice> RenderDevices
+    public ObservableCollection<Device> RenderDevices
     {
         get => renderDevices;
         set => SetProperty(ref renderDevices, value);
     }
 
-    private MMDevice? selectedRenderDevice;
+    private Device selectedRenderDevice = NoneItem;
 
-    public MMDevice? SelectedRenderDevice
+    public Device SelectedRenderDevice
     {
         get => selectedRenderDevice;
         set => SetProperty(ref selectedRenderDevice, value);
     }
 
-    private ObservableCollection<MMDevice> captureDevices;
+    private ObservableCollection<Device> captureDevices;
 
-    public ObservableCollection<MMDevice> CaptureDevices
+    public ObservableCollection<Device> CaptureDevices
     {
         get => captureDevices;
         set => SetProperty(ref captureDevices, value);
     }
 
-    private MMDevice? selectedCaptureDevice;
+    private Device selectedCaptureDevice = NoneItem;
 
-    public MMDevice? SelectedCaptureDevice
+    public Device SelectedCaptureDevice
     {
         get => selectedCaptureDevice;
         set => SetProperty(ref selectedCaptureDevice, value);
@@ -75,20 +76,21 @@ public class MainViewModel : ObservableObject
     private WaveFileWriter? renderWriter;
     private WasapiCapture? captureCapture;
     private WaveFileWriter? captureWriter;
+    private static readonly Device NoneItem = new(null);
 
     public MainViewModel()
     {
         MMDeviceEnumerator deviceEnumerator = new();
-        renderDevices = [null, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)];
-        captureDevices = [null, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)];
+        renderDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).Select(x => new Device(x))];
+        captureDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).Select(x => new Device(x))];
         StartStopRecordingCommand = new RelayCommand<bool?>(StartStopRecording);
 
         new DispatcherTimer(DispatcherPriority.Background) { IsEnabled = true, Interval = TimeSpan.FromMilliseconds(100) }.Tick += (s, e) =>
         {
             try
             {
-                RenderMasterPeakValue = selectedRenderDevice?.AudioMeterInformation.MasterPeakValue ?? 0;
-                CaptureMasterPeakValue = selectedCaptureDevice?.AudioMeterInformation.MasterPeakValue ?? 0;
+                RenderMasterPeakValue = selectedRenderDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
+                CaptureMasterPeakValue = selectedCaptureDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
             }
             catch (Exception ex)
             {
@@ -105,10 +107,10 @@ public class MainViewModel : ObservableObject
 
             if (isChecked == true)
             {
-                if (selectedRenderDevice != null)
+                if (selectedRenderDevice.MMDevice != null)
                 {
                     string renderFileName = $"render-{suffix}";
-                    renderCapture = new(selectedRenderDevice);
+                    renderCapture = new(selectedRenderDevice.MMDevice);
                     renderWriter = new(renderFileName, renderCapture.WaveFormat);
 
                     renderCapture.RecordingStopped += (s, e) =>
@@ -159,10 +161,10 @@ public class MainViewModel : ObservableObject
                     AppendLog($"Render Recording started.");
                 }
 
-                if (selectedCaptureDevice != null)
+                if (selectedCaptureDevice.MMDevice != null)
                 {
                     string captureFileName = $"capture-{suffix}";
-                    captureCapture = new(selectedCaptureDevice);
+                    captureCapture = new(selectedCaptureDevice.MMDevice);
                     captureWriter = new(captureFileName, captureCapture.WaveFormat);
 
                     captureCapture.RecordingStopped += (s, e) =>
