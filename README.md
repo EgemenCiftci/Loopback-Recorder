@@ -1,31 +1,46 @@
-# Loopback Recorder
+# LoopbackRecorder.Desktop
 
-A Windows desktop application for recording audio loopback using .NET 9, WPF, and NAudio.
+LoopbackRecorder.Desktop is a WPF application for Windows that allows you to record audio from system playback devices (loopback) and capture devices (microphones), with real-time peak monitoring and output to various audio formats.
 
 ## Features
 
-- Record system audio (loopback) directly from your Windows device.
-- Modern MVVM architecture using CommunityToolkit.Mvvm.
-- Dependency injection with Microsoft.Extensions.DependencyInjection.
-- Built with .NET 9 and WPF for a responsive desktop experience.
+- **Record from Playback (Render) and Capture Devices:**  
+  Select any active audio device for loopback (system audio) or capture (microphone) recording.
+
+- **Real-Time Peak Monitoring:**  
+  Visualize the master peak value for both render and capture devices.
+
+- **Format Conversion:**  
+  Recordings are saved as WAV files and can be automatically converted to AAC, MP3, or WMA formats using Media Foundation.
+
+- **Silence Detection:**  
+  Silent audio is automatically filtered out based on a configurable threshold.
+
+- **Logging:**  
+  All actions and errors are logged with timestamps for easy troubleshooting.
+
+## Requirements
+
+- **Windows 10/11**
+- **.NET 9.0**
+- **WPF Desktop Runtime**
+- **Media Foundation (for format conversion)**
+- **NAudio** (included via NuGet)
 
 ## Getting Started
 
-### Prerequisites
+1. **Clone the repository:**  git clone https://github.com/EgemenCiftci/Loopback-Recorder.git
+2. **Open the solution:**  
+   Open the solution file in Visual Studio 2022.
 
-- Windows 10 or later
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+3. **Restore NuGet packages:**  
+   Restore the required NuGet packages.
 
-### Building the Application
+4. **Build the solution:**  
+   Build the solution in Visual Studio.
 
-1. Clone the repository.
-2. Open the solution in Visual Studio 2022.
-3. Restore NuGet packages.
-4. Build the solution.
-
-### Running the Application
-
-- Press `F5` in Visual Studio or run the built executable from `bin\Debug\net9.0-windows`.
+5. **Run the application:**  
+   Press `F5` in Visual Studio or run the built executable from `bin\Debug\net9.0-windows`.
 
 ## Dependencies
 
