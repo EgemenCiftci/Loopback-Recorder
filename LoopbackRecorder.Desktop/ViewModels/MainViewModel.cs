@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LoopbackRecorder.Desktop.Enums;
+using LoopbackRecorder.Desktop.Properties;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Collections.ObjectModel;
@@ -90,8 +92,7 @@ public class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendLog($"An error occurred: {ex.Message}");
-                AppendLog(ex.StackTrace ?? "No stack trace available.");
+                AppendException(ex, "Error updating peak values");
             }
         };
     }
@@ -112,17 +113,37 @@ public class MainViewModel : ObservableObject
 
                     renderCapture.RecordingStopped += (s, e) =>
                     {
-                        renderWriter.Dispose();
-                        renderCapture.Dispose();
-                        AppendLog("Render recording stopped.");
+                        try
+                        {
+                            renderWriter.Dispose();
+                            renderCapture.Dispose();
+                            AppendLog("Render recording stopped.");
 
-                        ConvertTo("aac", renderFileName);
-                        AppendLog($"Converted to AAC format.");
+                            bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
+                            if (!result)
+                            {
+                                AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
+                                format = Formats.Wav;
+                            }
+                            ConvertTo(format, renderFileName);
+                            AppendLog($"Converted to AAC format.");
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendException(ex, "Error during render recording stop");
+                        }
                     };
 
                     renderCapture.DataAvailable += (s, e) =>
                     {
-                        renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        try
+                        {
+                            renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendException(ex, "Error writing render data");
+                        }
                     };
 
                     renderCapture.StartRecording();
@@ -140,17 +161,37 @@ public class MainViewModel : ObservableObject
 
                     captureCapture.RecordingStopped += (s, e) =>
                     {
-                        captureWriter.Dispose();
-                        captureCapture.Dispose();
-                        AppendLog("Capture recording stopped.");
+                        try
+                        {
+                            captureWriter.Dispose();
+                            captureCapture.Dispose();
+                            AppendLog("Capture recording stopped.");
 
-                        ConvertTo("aac", captureFileName);
-                        AppendLog($"Converted to AAC format.");
+                            bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
+                            if (!result)
+                            {
+                                AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
+                                format = Formats.Wav;
+                            }
+                            ConvertTo(format, captureFileName);
+                            AppendLog($"Converted to AAC format.");
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendException(ex, "Error during capture recording stop");
+                        }
                     };
 
                     captureCapture.DataAvailable += (s, e) =>
                     {
-                        captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        try
+                        {
+                            captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendException(ex, "Error writing capture data");
+                        }
                     };
 
                     captureCapture.StartRecording();
@@ -168,8 +209,7 @@ public class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendLog($"An error occurred: {ex.Message}");
-            AppendLog(ex.StackTrace ?? "No stack trace available.");
+            AppendException(ex, "Error starting/stopping recording");
         }
     }
 
@@ -181,23 +221,26 @@ public class MainViewModel : ObservableObject
         });
     }
 
-    private static void ConvertTo(string type, string waveFilePath)
+    private void AppendException(Exception ex, string message = "An error occurred")
+    {
+        AppendLog($"{message}: {ex.Message}");
+        AppendLog(ex.StackTrace ?? "No stack trace available.");
+    }
+
+    private static void ConvertTo(Formats format, string waveFilePath)
     {
         using WaveFileReader reader = new(waveFilePath);
-        switch (type)
+        switch (format)
         {
-            case "aac":
+            case Formats.Aac:
                 MediaFoundationEncoder.EncodeToAac(reader, waveFilePath.Replace(".wav", ".mp4", StringComparison.InvariantCultureIgnoreCase));
                 break;
-            case "mp3":
+            case Formats.Mp3:
                 MediaFoundationEncoder.EncodeToMp3(reader, waveFilePath.Replace(".wav", ".mp3", StringComparison.InvariantCultureIgnoreCase));
                 break;
-            case "wma":
+            case Formats.Wma:
                 MediaFoundationEncoder.EncodeToWma(reader, waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase));
                 break;
-            default:
-                throw new ArgumentException($"Unsupported conversion type: {type}");
         }
-
     }
 }
