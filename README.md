@@ -1,4 +1,4 @@
-# LoopbackRecorder.Desktop
+# Loopback Recorder
 
 LoopbackRecorder.Desktop is a WPF application for Windows that allows you to record audio from system playback devices (loopback) and capture devices (microphones), with real-time peak monitoring and output to various audio formats.
 
