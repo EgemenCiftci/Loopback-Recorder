@@ -204,31 +204,38 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Window.Resources>
-    <Grid Margin="10">
+    <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Label Grid.Row="0">Render Devices:</Label>
-        <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
+        <GroupBox Header="Devices">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0">Render:</Label>
+                <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
                   ItemsSource="{Binding RenderDevices}" 
                   SelectedItem="{Binding SelectedRenderDevice}" 
                   SelectedValuePath="FriendlyName"
                   ItemTemplateSelector="{StaticResource DeviceTemplateSelector}" 
                   Tag="{Binding RenderMasterPeakValue}" 
                   Grid.Row="1"/>
-        <Label Grid.Row="2">Capture Devices:</Label>
-        <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
+                <Label Grid.Row="2">Capture:</Label>
+                <ComboBox Template="{StaticResource ComboBoxTemplate1}" 
                   ItemsSource="{Binding CaptureDevices}" 
                   SelectedItem="{Binding SelectedCaptureDevice}" 
                   ItemTemplateSelector="{StaticResource DeviceTemplateSelector}" 
                   Tag="{Binding CaptureMasterPeakValue}"
-                  Grid.Row="3"/>           
-        <ToggleButton Command="{Binding StartStopRecordingCommand}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Margin="0,10,0,0" Grid.Row="4" Height="30">
+                  Grid.Row="3"/>
+            </Grid>
+        </GroupBox>
+        <ToggleButton Command="{Binding StartStopRecordingCommand}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Margin="0,10,0,0" Grid.Row="1" Height="30">
             <ToggleButton.Style>
                 <Style TargetType="ToggleButton">
                     <Setter Property="Content">
@@ -259,7 +266,7 @@
                 </Style>
             </ToggleButton.Style>
         </ToggleButton>
-        <TextBox Grid.Row="5"
+        <TextBox Grid.Row="2"
                  Text="{Binding Log}"
                  TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto"
