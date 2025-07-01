@@ -1,7 +1,7 @@
-﻿<Application x:Class="LoopbackRecorder.Desktop.App"
+﻿<Application x:Class="LoopbackRecorder.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:LoopbackRecorder.Desktop"
+             xmlns:local="clr-namespace:LoopbackRecorder"
              Startup="Application_Startup">
     <Application.Resources>
          

@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LoopbackRecorder.Desktop.Enums;
-using LoopbackRecorder.Desktop.Models;
-using LoopbackRecorder.Desktop.Properties;
+using LoopbackRecorder.Enums;
+using LoopbackRecorder.Models;
+using LoopbackRecorder.Properties;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Collections.ObjectModel;
@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace LoopbackRecorder.Desktop.ViewModels;
+namespace LoopbackRecorder.ViewModels;
 
 public class MainViewModel : ObservableObject
 {

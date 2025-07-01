@@ -1,6 +1,6 @@
 ﻿using NAudio.CoreAudioApi;
 
-namespace LoopbackRecorder.Desktop.Models
+namespace LoopbackRecorder.Models
 {
     public class Device(MMDevice? mmDevice) : IDisposable
     {

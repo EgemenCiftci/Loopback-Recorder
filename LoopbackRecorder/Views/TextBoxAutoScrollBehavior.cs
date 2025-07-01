@@ -1,7 +1,7 @@
 using Microsoft.Xaml.Behaviors;
 using System.Windows.Controls;
 
-namespace LoopbackRecorder.Desktop.Views;
+namespace LoopbackRecorder.Views;
 
 public class TextBoxAutoScrollBehavior : Behavior<TextBox>
 {

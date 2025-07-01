@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace LoopbackRecorder.Desktop.Views;
+namespace LoopbackRecorder.Views;
 
 public class DeviceTemplateSelector : DataTemplateSelector
 {

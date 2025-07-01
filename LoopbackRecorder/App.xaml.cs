@@ -1,8 +1,8 @@
-﻿using LoopbackRecorder.Desktop.ViewModels;
+﻿using LoopbackRecorder.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
-namespace LoopbackRecorder.Desktop
+namespace LoopbackRecorder
 {
     /// <summary>
     /// Interaction logic for App.xaml

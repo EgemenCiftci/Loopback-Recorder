@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoopbackRecorder.Desktop", "LoopbackRecorder.Desktop\LoopbackRecorder.Desktop.csproj", "{05DB42F0-16A8-4D04-95FD-5D9E51A64433}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoopbackRecorder", "LoopbackRecorder\LoopbackRecorder.csproj", "{BB4A4FFB-04F1-CB40-E6A2-FE929549C835}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{05DB42F0-16A8-4D04-95FD-5D9E51A64433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05DB42F0-16A8-4D04-95FD-5D9E51A64433}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05DB42F0-16A8-4D04-95FD-5D9E51A64433}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05DB42F0-16A8-4D04-95FD-5D9E51A64433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB4A4FFB-04F1-CB40-E6A2-FE929549C835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB4A4FFB-04F1-CB40-E6A2-FE929549C835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB4A4FFB-04F1-CB40-E6A2-FE929549C835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB4A4FFB-04F1-CB40-E6A2-FE929549C835}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

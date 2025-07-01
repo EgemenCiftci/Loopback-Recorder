@@ -1,4 +1,4 @@
-﻿namespace LoopbackRecorder.Desktop.Enums;
+﻿namespace LoopbackRecorder.Enums;
 
 public enum Formats
 {
