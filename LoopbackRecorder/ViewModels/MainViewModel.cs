@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LoopbackRecorder.Enums;
+using LoopbackRecorder.Helpers;
 using LoopbackRecorder.Models;
 using LoopbackRecorder.Properties;
+using LoopbackRecorder.Views;
+using Microsoft.Extensions.DependencyInjection;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Collections.ObjectModel;
@@ -46,7 +49,9 @@ public class MainViewModel : ObservableObject
         set => SetProperty(ref selectedCaptureDevice, value);
     }
 
-    public ICommand StartStopRecordingCommand { get; }
+    public ICommand StartStopRecordingCommand => new RelayCommand<bool?>(StartStopRecording);
+
+    public ICommand ShowSettingsCommand => new RelayCommand(ShowSettings);
 
     private double renderMasterPeakValue;
 
@@ -64,12 +69,12 @@ public class MainViewModel : ObservableObject
         set => SetProperty(ref captureMasterPeakValue, value);
     }
 
-    private string? log;
+    private LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
 
-    public string? Log
+    public LogHelper LogHelper
     {
-        get => log;
-        set => SetProperty(ref log, value);
+        get => logHelper;
+        set => SetProperty(ref logHelper, value);
     }
 
     private WasapiLoopbackCapture? renderCapture;
@@ -83,7 +88,6 @@ public class MainViewModel : ObservableObject
         MMDeviceEnumerator deviceEnumerator = new();
         renderDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).Select(x => new Device(x))];
         captureDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).Select(x => new Device(x))];
-        StartStopRecordingCommand = new RelayCommand<bool?>(StartStopRecording);
 
         new DispatcherTimer(DispatcherPriority.Background) { IsEnabled = true, Interval = TimeSpan.FromMilliseconds(100) }.Tick += (s, e) =>
         {
@@ -94,7 +98,7 @@ public class MainViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                AppendException(ex, "Error updating peak values");
+                logHelper.AppendException(ex, "Error updating peak values");
             }
         };
     }
@@ -120,22 +124,22 @@ public class MainViewModel : ObservableObject
                             renderWriter.Dispose();
                             renderCapture.Dispose();
 
-                            AppendLog("Render recording stopped.");
+                            logHelper.AppendLog("Render recording stopped.");
 
                             bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
 
                             if (!result)
                             {
-                                AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
+                                logHelper.AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
                                 format = Formats.Wav;
                             }
 
                             ConvertTo(format, renderFileName);
-                            AppendLog($"Converted to AAC format.");
+                            logHelper.AppendLog($"Converted to {format} format.");
                         }
                         catch (Exception ex)
                         {
-                            AppendException(ex, "Error during render recording stop");
+                            logHelper.AppendException(ex, "Error during render recording stop");
                         }
                     };
 
@@ -150,15 +154,15 @@ public class MainViewModel : ObservableObject
                         }
                         catch (Exception ex)
                         {
-                            AppendException(ex, "Error writing render data");
+                            logHelper.AppendException(ex, "Error writing render data");
                         }
                     };
 
                     renderCapture.StartRecording();
-                    AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
-                    AppendLog($"Selected Render Device: {selectedRenderDevice}");
-                    AppendLog($"Render Filename: {renderFileName}");
-                    AppendLog($"Render Recording started.");
+                    logHelper.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
+                    logHelper.AppendLog($"Selected Render Device: {selectedRenderDevice}");
+                    logHelper.AppendLog($"Render Filename: {renderFileName}");
+                    logHelper.AppendLog($"Render Recording started.");
                 }
 
                 if (selectedCaptureDevice.MMDevice != null)
@@ -174,22 +178,22 @@ public class MainViewModel : ObservableObject
                             captureWriter.Dispose();
                             captureCapture.Dispose();
 
-                            AppendLog("Capture recording stopped.");
+                            logHelper.AppendLog("Capture recording stopped.");
 
                             bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
 
                             if (!result)
                             {
-                                AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
+                                logHelper.AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
                                 format = Formats.Wav;
                             }
 
                             ConvertTo(format, captureFileName);
-                            AppendLog($"Converted to AAC format.");
+                            logHelper.AppendLog($"Converted to {format} format.");
                         }
                         catch (Exception ex)
                         {
-                            AppendException(ex, "Error during capture recording stop");
+                            logHelper.AppendException(ex, "Error during capture recording stop");
                         }
                     };
 
@@ -204,15 +208,15 @@ public class MainViewModel : ObservableObject
                         }
                         catch (Exception ex)
                         {
-                            AppendException(ex, "Error writing capture data");
+                            logHelper.AppendException(ex, "Error writing capture data");
                         }
                     };
 
                     captureCapture.StartRecording();
-                    AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
-                    AppendLog($"Selected Capture Device: {selectedCaptureDevice}");
-                    AppendLog($"Capture Filename: {captureFileName}");
-                    AppendLog($"Capture Recording started.");
+                    logHelper.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
+                    logHelper.AppendLog($"Selected Capture Device: {selectedCaptureDevice}");
+                    logHelper.AppendLog($"Capture Filename: {captureFileName}");
+                    logHelper.AppendLog($"Capture Recording started.");
                 }
             }
             else
@@ -223,22 +227,8 @@ public class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            AppendException(ex, "Error starting/stopping recording");
+            logHelper.AppendException(ex, "Error starting/stopping recording");
         }
-    }
-
-    private void AppendLog(string message)
-    {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            Log += $"{DateTime.Now:HH:mm:ss.fff} - {message}\n";
-        });
-    }
-
-    private void AppendException(Exception ex, string message = "An error occurred")
-    {
-        AppendLog($"{message}: {ex.Message}");
-        AppendLog(ex.StackTrace ?? "No stack trace available.");
     }
 
     private static void ConvertTo(Formats format, string waveFilePath)
@@ -294,5 +284,19 @@ public class MainViewModel : ObservableObject
         double rms = Math.Sqrt(sumSquares / samples);
 
         return rms < Settings.Default.SilenceThreshold;
+    }
+
+    public void ShowSettings()
+    {
+        try
+        {
+            SettingsView settingsView = App.serviceProvider.GetRequiredService<SettingsView>();
+            settingsView.DataContext = App.serviceProvider.GetRequiredService<SettingsViewModel>();
+            Application.Current.MainWindow.Content = settingsView;
+        }
+        catch (Exception ex)
+        {
+            logHelper.AppendException(ex, "Error showing settings.");
+        }
     }
 }

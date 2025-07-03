@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="LoopbackRecorder.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewmodels="clr-namespace:LoopbackRecorder.ViewModels"
+             xmlns:enums="clr-namespace:LoopbackRecorder.Enums"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+             d:DesignHeight="450" d:DesignWidth="800" Padding="10">
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="FormatsValues"
+                            MethodName="GetValues"
+                            ObjectType="{x:Type enums:Formats}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:Formats"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Button Grid.ColumnSpan="2" Command="{Binding ShowMainCommand}" Margin="0,0,0,10" Width="30" Height="30">
+            <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Fill="Black" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </Canvas>
+            </Viewbox>
+        </Button>
+        <Label Grid.Row="1" Content="Output Format:"/>
+        <ComboBox Grid.Row="1"
+                  Grid.Column="1"
+                  ItemsSource="{Binding Source={StaticResource FormatsValues}}"
+                  SelectedItem="{Binding OutputFormat, Mode=TwoWay}" Margin="0,0,0,10"/>
+        <Label Content="Silence Threshold:" Grid.Row="2"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SilenceThreshold}"/>
+    </Grid>
+</UserControl>

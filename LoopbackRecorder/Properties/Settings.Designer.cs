@@ -23,21 +23,27 @@ namespace LoopbackRecorder.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("aac")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Aac")]
         public string OutputFormat {
             get {
                 return ((string)(this["OutputFormat"]));
             }
+            set {
+                this["OutputFormat"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.01")]
         public float SilenceThreshold {
             get {
                 return ((float)(this["SilenceThreshold"]));
+            }
+            set {
+                this["SilenceThreshold"] = value;
             }
         }
     }

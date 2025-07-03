@@ -1,36 +1,39 @@
-﻿using LoopbackRecorder.ViewModels;
+﻿using LoopbackRecorder.Helpers;
+using LoopbackRecorder.ViewModels;
+using LoopbackRecorder.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
-namespace LoopbackRecorder
+namespace LoopbackRecorder;
+
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    public static IServiceProvider serviceProvider;
+
+    private void Application_Startup(object sender, StartupEventArgs e)
     {
-        private ServiceProvider? _serviceProvider;
+        ServiceCollection serviceCollection = new();
+        ConfigureServices(serviceCollection);
 
-        private void Application_Startup(object sender, StartupEventArgs e)
-        {
-            ServiceCollection serviceCollection = new();
-            ConfigureServices(serviceCollection);
+        serviceProvider = serviceCollection.BuildServiceProvider();
 
-            _serviceProvider = serviceCollection.BuildServiceProvider();
-
-            MainView mainView = _serviceProvider.GetRequiredService<MainView>();
-            mainView.DataContext = _serviceProvider.GetRequiredService<MainViewModel>();
-            mainView.Show();
-        }
-
-        private static void ConfigureServices(IServiceCollection services)
-        {
-            //_ = services.AddSingleton<IItemService, ItemService>();
-            //_ = services.AddScoped<IItemRepository, ItemRepository>();
-            _ = services.AddSingleton<MainViewModel>();
-            _ = services.AddSingleton<MainView>();
-            //_ = services.AddSingleton<Window>();
-        }
+        MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
+        MainView mainView = serviceProvider.GetRequiredService<MainView>();
+        mainView.DataContext = serviceProvider.GetRequiredService<MainViewModel>();
+        mainWindow.Content = mainView;
+        mainWindow.Show();
     }
 
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        _ = services.AddSingleton<LogHelper>();
+
+        _ = services.AddSingleton<MainViewModel>();
+        _ = services.AddSingleton<MainView>();
+
+        _ = services.AddSingleton<SettingsViewModel>();
+        _ = services.AddSingleton<SettingsView>();
+
+        _ = services.AddSingleton<MainWindow>();
+    }
 }
