@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -108,13 +109,20 @@ public class MainViewModel : ObservableObject
     {
         try
         {
-            string suffix = $"{DateTime.Now:yyyyMMddHHmmss}.wav";
-
             if (isChecked == true)
             {
+                string folderName = $"{DateTime.Now:yyyyMMddHHmmss}";
+
+                if (!Directory.Exists(folderName))
+                {
+                    _ = Directory.CreateDirectory(folderName);
+                }
+
+                Directory.SetCurrentDirectory(folderName);
+
                 if (selectedRenderDevice.MMDevice != null)
                 {
-                    string renderFileName = $"render-{suffix}";
+                    string renderFileName = $"render.wav";
                     renderCapture = new(selectedRenderDevice.MMDevice);
                     renderWriter = new(renderFileName, renderCapture.WaveFormat);
 
@@ -133,8 +141,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    string convertedFileName = ConvertTo(format, renderFileName);
-                                    logHelper.AppendLog($"Converted to {format} format. {convertedFileName}");
+                                    string convertedFileName = await ConvertToAsync(format, renderFileName);
                                 }
                                 else
                                 {
@@ -145,7 +152,6 @@ public class MainViewModel : ObservableObject
                             if (Settings.Default.CanTranscribe)
                             {
                                 string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
-                                logHelper.AppendLog($"Transcribed. {transcriptionFileName}");
                             }
                         }
                         catch (Exception ex)
@@ -178,7 +184,7 @@ public class MainViewModel : ObservableObject
 
                 if (selectedCaptureDevice.MMDevice != null)
                 {
-                    string captureFileName = $"capture-{suffix}";
+                    string captureFileName = $"capture.wav";
                     captureCapture = new(selectedCaptureDevice.MMDevice);
                     captureWriter = new(captureFileName, captureCapture.WaveFormat);
 
@@ -197,8 +203,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    string convertedFileName = ConvertTo(format, captureFileName);
-                                    logHelper.AppendLog($"Converted to {format} format. {convertedFileName}");
+                                    string convertedFileName = await ConvertToAsync(format, captureFileName);
                                 }
                                 else
                                 {
@@ -209,7 +214,6 @@ public class MainViewModel : ObservableObject
                             if (Settings.Default.CanTranscribe)
                             {
                                 string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
-                                logHelper.AppendLog($"Transcribed. {transcriptionFileName}");
                             }
                         }
                         catch (Exception ex)
@@ -252,8 +256,9 @@ public class MainViewModel : ObservableObject
         }
     }
 
-    private static string ConvertTo(Formats format, string waveFilePath)
+    private async Task<string> ConvertToAsync(Formats format, string waveFilePath)
     {
+        logHelper.AppendLog($"Converting to {format} format...");
         using WaveFileReader reader = new(waveFilePath);
         string convertedFilePath = waveFilePath;
 
@@ -261,18 +266,19 @@ public class MainViewModel : ObservableObject
         {
             case Formats.Aac:
                 convertedFilePath = waveFilePath.Replace(".wav", ".mp4", StringComparison.InvariantCultureIgnoreCase);
-                MediaFoundationEncoder.EncodeToAac(reader, convertedFilePath);
+                await Task.Run(() => MediaFoundationEncoder.EncodeToAac(reader, convertedFilePath));
                 break;
             case Formats.Mp3:
                 convertedFilePath = waveFilePath.Replace(".wav", ".mp3", StringComparison.InvariantCultureIgnoreCase);
-                MediaFoundationEncoder.EncodeToMp3(reader, convertedFilePath);
+                await Task.Run(() => MediaFoundationEncoder.EncodeToMp3(reader, convertedFilePath));
                 break;
             case Formats.Wma:
                 convertedFilePath = waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase);
-                MediaFoundationEncoder.EncodeToWma(reader, convertedFilePath);
+                await Task.Run(() => MediaFoundationEncoder.EncodeToWma(reader, convertedFilePath));
                 break;
         }
 
+        logHelper.AppendLog($"Success.");
         return convertedFilePath;
     }
 

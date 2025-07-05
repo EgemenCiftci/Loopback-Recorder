@@ -19,14 +19,31 @@ public class TranscriptionHelper
         string modelFileName = Settings.Default.TranscribeModelName;
         string transcriptionFileName = wavFileName.Replace(".wav", ".txt", StringComparison.InvariantCultureIgnoreCase);
 
-        if (!File.Exists(modelFileName))
+        string currentDirectory = Directory.GetCurrentDirectory();
+        string modelsPath = Path.GetFullPath(Path.Combine(currentDirectory, "..", "models"));
+
+        if (!Directory.Exists(modelsPath))
         {
-            logHelper.AppendLog($"Model file '{modelFileName}' not found. Downloading...");
-            await DownloadModel(modelFileName, ggmlType);
-            logHelper.AppendLog($"Success.");
+            _ = Directory.CreateDirectory(modelsPath);
         }
 
-        using WhisperFactory whisperFactory = WhisperFactory.FromPath(modelFileName);
+        Directory.SetCurrentDirectory(modelsPath);
+
+        if (!File.Exists(modelFileName))
+        {
+            logHelper.AppendLog($"Model file '{modelFileName}' not found.");
+            await DownloadModel(modelFileName, ggmlType);
+        }
+
+        logHelper.AppendLog($"Transcribing...");
+
+        using MemoryStream modelStream = new();
+        using FileStream modelFileStream = File.OpenRead(modelFileName);
+        await modelFileStream.CopyToAsync(modelStream);
+
+        Directory.SetCurrentDirectory(currentDirectory);
+
+        using WhisperFactory whisperFactory = WhisperFactory.FromBuffer(modelStream.ToArray());
         using WhisperProcessor processor = whisperFactory.CreateBuilder().WithLanguage("auto").Build();
         using FileStream fileStream = File.OpenRead(wavFileName);
         using MemoryStream wavStream = new();
@@ -44,13 +61,17 @@ public class TranscriptionHelper
 
         await File.WriteAllTextAsync(transcriptionFileName, sb.ToString(), Encoding.UTF8);
 
+        logHelper.AppendLog($"Success.");
+
         return transcriptionFileName;
     }
 
-    private static async Task DownloadModel(string fileName, GgmlType ggmlType)
+    private async Task DownloadModel(string fileName, GgmlType ggmlType)
     {
+        logHelper.AppendLog($"Downloading...");
         using Stream modelStream = await WhisperGgmlDownloader.Default.GetGgmlModelAsync(ggmlType);
         using FileStream fileWriter = File.OpenWrite(fileName);
         await modelStream.CopyToAsync(fileWriter);
+        logHelper.AppendLog($"Success.");
     }
 }
