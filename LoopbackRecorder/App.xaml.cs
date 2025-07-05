@@ -27,6 +27,7 @@ public partial class App : Application
     private static void ConfigureServices(IServiceCollection services)
     {
         _ = services.AddSingleton<LogHelper>();
+        _ = services.AddSingleton<TranscriptionHelper>();
 
         _ = services.AddSingleton<MainViewModel>();
         _ = services.AddSingleton<MainView>();

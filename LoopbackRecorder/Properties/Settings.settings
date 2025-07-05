@@ -2,11 +2,23 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="LoopbackRecorder.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="OutputFormat" Type="System.String" Scope="User">
+    <Setting Name="ConvertFormat" Type="System.String" Scope="User">
       <Value Profile="(Default)">Aac</Value>
     </Setting>
     <Setting Name="SilenceThreshold" Type="System.Single" Scope="User">
       <Value Profile="(Default)">0.01</Value>
+    </Setting>
+    <Setting Name="CanTranscribe" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="TranscribeModelName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ggml-base.bin</Value>
+    </Setting>
+    <Setting Name="CanConvert" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CanRemoveSilence" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -12,17 +12,49 @@ namespace LoopbackRecorder.ViewModels;
 
 public class SettingsViewModel : ObservableObject
 {
-    private Formats outputFormat = Enum.Parse<Formats>(Settings.Default.OutputFormat);
+    
     private readonly LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
 
-    public Formats OutputFormat
+    private bool canConvert = Settings.Default.CanConvert;
+
+    public bool CanConvert
     {
-        get => outputFormat;
+        get => canConvert;
         set
         {
-            if (SetProperty(ref outputFormat, value))
+            if (SetProperty(ref canConvert, value))
             {
-                Settings.Default.OutputFormat = value.ToString();
+                Settings.Default.CanConvert = value;
+                Settings.Default.Save();
+            }
+        }
+    }
+
+    private Formats convertFormat = Enum.Parse<Formats>(Settings.Default.ConvertFormat);
+
+    public Formats ConvertFormat
+    {
+        get => convertFormat;
+        set
+        {
+            if (SetProperty(ref convertFormat, value))
+            {
+                Settings.Default.ConvertFormat = value.ToString();
+                Settings.Default.Save();
+            }
+        }
+    }
+
+    private bool canRemoveSilence = Settings.Default.CanRemoveSilence;
+
+    public bool CanRemoveSilence
+    {
+        get => canRemoveSilence;
+        set
+        {
+            if (SetProperty(ref canRemoveSilence, value))
+            {
+                Settings.Default.CanRemoveSilence = value;
                 Settings.Default.Save();
             }
         }
@@ -38,6 +70,36 @@ public class SettingsViewModel : ObservableObject
             if (SetProperty(ref silenceThreshold, value))
             {
                 Settings.Default.SilenceThreshold = value;
+                Settings.Default.Save();
+            }
+        }
+    }
+
+    private bool canTranscribe = Settings.Default.CanTranscribe;
+
+    public bool CanTranscribe
+    {
+        get => canTranscribe;
+        set
+        {
+            if (SetProperty(ref canTranscribe, value))
+            {
+                Settings.Default.CanTranscribe = value;
+                Settings.Default.Save();
+            }
+        }
+    }
+
+    private string transcribeModelName = Settings.Default.TranscribeModelName;
+
+    public string TranscribeModelName
+    {
+        get => transcribeModelName;
+        set
+        {
+            if (SetProperty(ref transcribeModelName, value))
+            {
+                Settings.Default.TranscribeModelName = value;
                 Settings.Default.Save();
             }
         }

@@ -22,25 +22,54 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Button Grid.ColumnSpan="2" Command="{Binding ShowMainCommand}" Margin="0,0,0,10" Width="30" Height="30">
+        <Button Command="{Binding ShowMainCommand}" Margin="0,0,0,10" Width="30" Height="30">
             <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Canvas Width="24" Height="24">
                     <Path Fill="Black" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </Canvas>
             </Viewbox>
         </Button>
-        <Label Grid.Row="1" Content="Output Format:"/>
-        <ComboBox Grid.Row="1"
-                  Grid.Column="1"
+        <GroupBox Grid.Row="1">
+            <GroupBox.Header>
+                <CheckBox Content="Remove Silence" IsChecked="{Binding CanRemoveSilence}"/>
+            </GroupBox.Header>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Content="Silence Threshold:"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding SilenceThreshold}"
+                         VerticalContentAlignment="Center"
+                         IsEnabled="{Binding CanRemoveSilence}" />
+            </Grid>
+        </GroupBox>
+        <GroupBox Grid.Row="2">
+            <GroupBox.Header>
+                <CheckBox Content="Convert" IsChecked="{Binding CanConvert}"/>
+            </GroupBox.Header>
+            <Grid>
+                <ComboBox Grid.Row="1"
                   ItemsSource="{Binding Source={StaticResource FormatsValues}}"
-                  SelectedItem="{Binding OutputFormat, Mode=TwoWay}" Margin="0,0,0,10"/>
-        <Label Content="Silence Threshold:" Grid.Row="2"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SilenceThreshold}"/>
+                  SelectedItem="{Binding ConvertFormat}" Margin="5" IsEnabled="{Binding CanConvert}"/>
+            </Grid>
+        </GroupBox>
+        <GroupBox Grid.Row="3">
+            <GroupBox.Header>
+                <CheckBox Content="Transcribe" IsChecked="{Binding CanTranscribe}"/>
+            </GroupBox.Header>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Content="Model Name:"/>
+                <TextBox Grid.Column="1" Text="{Binding TranscribeModelName}" VerticalContentAlignment="Center" IsEnabled="{Binding CanTranscribe}"/>
+            </Grid>
+        </GroupBox>
     </Grid>
 </UserControl>

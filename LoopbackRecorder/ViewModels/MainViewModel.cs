@@ -70,6 +70,7 @@ public class MainViewModel : ObservableObject
     }
 
     private LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
+    private readonly TranscriptionHelper transcriptionHelper = App.serviceProvider.GetRequiredService<TranscriptionHelper>();
 
     public LogHelper LogHelper
     {
@@ -117,7 +118,7 @@ public class MainViewModel : ObservableObject
                     renderCapture = new(selectedRenderDevice.MMDevice);
                     renderWriter = new(renderFileName, renderCapture.WaveFormat);
 
-                    renderCapture.RecordingStopped += (s, e) =>
+                    renderCapture.RecordingStopped += async (s, e) =>
                     {
                         try
                         {
@@ -126,16 +127,26 @@ public class MainViewModel : ObservableObject
 
                             logHelper.AppendLog("Render recording stopped.");
 
-                            bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
-
-                            if (!result)
+                            if (Settings.Default.CanConvert)
                             {
-                                logHelper.AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
-                                format = Formats.Wav;
+                                bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
+
+                                if (result)
+                                {
+                                    string convertedFileName = ConvertTo(format, renderFileName);
+                                    logHelper.AppendLog($"Converted to {format} format. {convertedFileName}");
+                                }
+                                else
+                                {
+                                    logHelper.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                                }
                             }
 
-                            ConvertTo(format, renderFileName);
-                            logHelper.AppendLog($"Converted to {format} format.");
+                            if (Settings.Default.CanTranscribe)
+                            {
+                                string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
+                                logHelper.AppendLog($"Transcribed. {transcriptionFileName}");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -147,7 +158,7 @@ public class MainViewModel : ObservableObject
                     {
                         try
                         {
-                            if (!IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat))
+                            if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat)))
                             {
                                 renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
                             }
@@ -171,7 +182,7 @@ public class MainViewModel : ObservableObject
                     captureCapture = new(selectedCaptureDevice.MMDevice);
                     captureWriter = new(captureFileName, captureCapture.WaveFormat);
 
-                    captureCapture.RecordingStopped += (s, e) =>
+                    captureCapture.RecordingStopped += async (s, e) =>
                     {
                         try
                         {
@@ -180,16 +191,26 @@ public class MainViewModel : ObservableObject
 
                             logHelper.AppendLog("Capture recording stopped.");
 
-                            bool result = Enum.TryParse(Settings.Default.OutputFormat, true, out Formats format);
-
-                            if (!result)
+                            if (Settings.Default.CanConvert)
                             {
-                                logHelper.AppendLog($"Invalid output format: {Settings.Default.OutputFormat}. Defaulting to Wav.");
-                                format = Formats.Wav;
+                                bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
+
+                                if (result)
+                                {
+                                    string convertedFileName = ConvertTo(format, captureFileName);
+                                    logHelper.AppendLog($"Converted to {format} format. {convertedFileName}");
+                                }
+                                else
+                                {
+                                    logHelper.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                                }
                             }
 
-                            ConvertTo(format, captureFileName);
-                            logHelper.AppendLog($"Converted to {format} format.");
+                            if (Settings.Default.CanTranscribe)
+                            {
+                                string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
+                                logHelper.AppendLog($"Transcribed. {transcriptionFileName}");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -201,7 +222,7 @@ public class MainViewModel : ObservableObject
                     {
                         try
                         {
-                            if (!IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat))
+                            if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat)))
                             {
                                 captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
                             }
@@ -231,22 +252,28 @@ public class MainViewModel : ObservableObject
         }
     }
 
-    private static void ConvertTo(Formats format, string waveFilePath)
+    private static string ConvertTo(Formats format, string waveFilePath)
     {
         using WaveFileReader reader = new(waveFilePath);
+        string convertedFilePath = waveFilePath;
 
         switch (format)
         {
             case Formats.Aac:
-                MediaFoundationEncoder.EncodeToAac(reader, waveFilePath.Replace(".wav", ".mp4", StringComparison.InvariantCultureIgnoreCase));
+                convertedFilePath = waveFilePath.Replace(".wav", ".mp4", StringComparison.InvariantCultureIgnoreCase);
+                MediaFoundationEncoder.EncodeToAac(reader, convertedFilePath);
                 break;
             case Formats.Mp3:
-                MediaFoundationEncoder.EncodeToMp3(reader, waveFilePath.Replace(".wav", ".mp3", StringComparison.InvariantCultureIgnoreCase));
+                convertedFilePath = waveFilePath.Replace(".wav", ".mp3", StringComparison.InvariantCultureIgnoreCase);
+                MediaFoundationEncoder.EncodeToMp3(reader, convertedFilePath);
                 break;
             case Formats.Wma:
-                MediaFoundationEncoder.EncodeToWma(reader, waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase));
+                convertedFilePath = waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase);
+                MediaFoundationEncoder.EncodeToWma(reader, convertedFilePath);
                 break;
         }
+
+        return convertedFilePath;
     }
 
     private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)

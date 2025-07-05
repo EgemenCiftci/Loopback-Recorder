@@ -26,12 +26,12 @@ namespace LoopbackRecorder.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Aac")]
-        public string OutputFormat {
+        public string ConvertFormat {
             get {
-                return ((string)(this["OutputFormat"]));
+                return ((string)(this["ConvertFormat"]));
             }
             set {
-                this["OutputFormat"] = value;
+                this["ConvertFormat"] = value;
             }
         }
         
@@ -44,6 +44,54 @@ namespace LoopbackRecorder.Properties {
             }
             set {
                 this["SilenceThreshold"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CanTranscribe {
+            get {
+                return ((bool)(this["CanTranscribe"]));
+            }
+            set {
+                this["CanTranscribe"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("ggml-base.bin")]
+        public string TranscribeModelName {
+            get {
+                return ((string)(this["TranscribeModelName"]));
+            }
+            set {
+                this["TranscribeModelName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CanConvert {
+            get {
+                return ((bool)(this["CanConvert"]));
+            }
+            set {
+                this["CanConvert"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool CanRemoveSilence {
+            get {
+                return ((bool)(this["CanRemoveSilence"]));
+            }
+            set {
+                this["CanRemoveSilence"] = value;
             }
         }
     }
