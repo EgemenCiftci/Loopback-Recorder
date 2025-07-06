@@ -15,6 +15,19 @@ public class TranscriptionHelper
 
     public async Task TranscribeWithWhisperAsync(string wavFileName)
     {
+        if (!File.Exists(wavFileName))
+        {
+            logHelper.AppendLog($"Transcribe: File does not exist. {wavFileName}");
+            return;
+        }
+
+        using var reader0 = new WaveFileReader(wavFileName);
+        if (reader0.Length == 0 || reader0.SampleCount == 0)
+        {
+            logHelper.AppendLog($"Transcribe: File is empty or has no samples. {wavFileName}");
+            return;
+        }
+
         GgmlType ggmlType = GgmlType.Base;
         string modelFileName = Settings.Default.TranscribeModelName;
         string transcriptionFileName = wavFileName.Replace(".wav", ".txt", StringComparison.InvariantCultureIgnoreCase);

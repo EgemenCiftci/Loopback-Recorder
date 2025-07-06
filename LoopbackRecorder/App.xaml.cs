@@ -28,6 +28,7 @@ public partial class App : System.Windows.Application
     {
         _ = services.AddSingleton<LogHelper>();
         _ = services.AddSingleton<TranscriptionHelper>();
+        _ = services.AddSingleton<ConversionHelper>();
 
         _ = services.AddSingleton<MainViewModel>();
         _ = services.AddSingleton<MainView>();

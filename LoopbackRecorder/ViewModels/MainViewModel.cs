@@ -71,7 +71,8 @@ public class MainViewModel : ObservableObject
 
     private LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
     private readonly TranscriptionHelper transcriptionHelper = App.serviceProvider.GetRequiredService<TranscriptionHelper>();
-
+    private readonly ConversionHelper conversionHelper = App.serviceProvider.GetRequiredService<ConversionHelper>();
+    
     public LogHelper LogHelper
     {
         get => logHelper;
@@ -140,7 +141,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    await ConvertToAsync(format, renderFileName);
+                                    await conversionHelper.ConvertToAsync(format, renderFileName);
                                 }
                                 else
                                 {
@@ -177,7 +178,7 @@ public class MainViewModel : ObservableObject
                     renderCapture.StartRecording();
                     logHelper.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
                     logHelper.AppendLog($"Selected Render Device: {selectedRenderDevice.FriendlyName}");
-                    logHelper.AppendLog($"Render Filename: {renderFileName}");
+                    logHelper.AppendLog($"Directory: {folderName}");
                     logHelper.AppendLog($"Render Recording started.");
                 }
 
@@ -202,7 +203,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    await ConvertToAsync(format, captureFileName);
+                                    await conversionHelper.ConvertToAsync(format, captureFileName);
                                 }
                                 else
                                 {
@@ -239,7 +240,7 @@ public class MainViewModel : ObservableObject
                     captureCapture.StartRecording();
                     logHelper.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
                     logHelper.AppendLog($"Selected Capture Device: {selectedCaptureDevice.FriendlyName}");
-                    logHelper.AppendLog($"Capture Filename: {captureFileName}");
+                    logHelper.AppendLog($"Directory: {folderName}");
                     logHelper.AppendLog($"Capture Recording started.");
                 }
             }
@@ -253,31 +254,6 @@ public class MainViewModel : ObservableObject
         {
             logHelper.AppendException(ex, "Error starting/stopping recording");
         }
-    }
-
-    private async Task ConvertToAsync(Formats format, string waveFilePath)
-    {
-        logHelper.AppendLog($"Converting to {format} format...");
-        using WaveFileReader reader = new(waveFilePath);
-        string convertedFilePath = waveFilePath;
-
-        switch (format)
-        {
-            case Formats.Aac:
-                convertedFilePath = waveFilePath.Replace(".wav", ".mp4", StringComparison.InvariantCultureIgnoreCase);
-                await Task.Run(() => MediaFoundationEncoder.EncodeToAac(reader, convertedFilePath));
-                break;
-            case Formats.Mp3:
-                convertedFilePath = waveFilePath.Replace(".wav", ".mp3", StringComparison.InvariantCultureIgnoreCase);
-                await Task.Run(() => MediaFoundationEncoder.EncodeToMp3(reader, convertedFilePath));
-                break;
-            case Formats.Wma:
-                convertedFilePath = waveFilePath.Replace(".wav", ".wma", StringComparison.InvariantCultureIgnoreCase);
-                await Task.Run(() => MediaFoundationEncoder.EncodeToWma(reader, convertedFilePath));
-                break;
-        }
-
-        logHelper.AppendLog($"Success.");
     }
 
     private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)
