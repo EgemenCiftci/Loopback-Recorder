@@ -25,14 +25,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button Command="{Binding ShowMainCommand}" Margin="0,0,0,10" Width="30" Height="30">
-            <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Canvas Width="24" Height="24">
-                    <Path Fill="Black" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                </Canvas>
-            </Viewbox>
-        </Button>
-        <GroupBox Grid.Row="1">
+        <GroupBox Grid.Row="0">
             <GroupBox.Header>
                 <CheckBox Content="Remove Silence" IsChecked="{Binding CanRemoveSilence}"/>
             </GroupBox.Header>
@@ -42,13 +35,10 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Label Content="Silence Threshold:"/>
-                <TextBox Grid.Column="1"
-                         Text="{Binding SilenceThreshold}"
-                         VerticalContentAlignment="Center"
-                         IsEnabled="{Binding CanRemoveSilence}" />
+                <Slider Grid.Column="1" Value="{Binding SilenceThreshold}" IsEnabled="{Binding CanRemoveSilence}" Minimum="0" Maximum="0.5" LargeChange="0.1" SmallChange="0.01" TickFrequency="0.01" TickPlacement="BottomRight" AutoToolTipPlacement="TopLeft" AutoToolTipPrecision="2"/>
             </Grid>
         </GroupBox>
-        <GroupBox Grid.Row="2">
+        <GroupBox Grid.Row="1">
             <GroupBox.Header>
                 <CheckBox Content="Convert" IsChecked="{Binding CanConvert}"/>
             </GroupBox.Header>
@@ -58,7 +48,7 @@
                   SelectedItem="{Binding ConvertFormat}" Margin="5" IsEnabled="{Binding CanConvert}"/>
             </Grid>
         </GroupBox>
-        <GroupBox Grid.Row="3">
+        <GroupBox Grid.Row="2">
             <GroupBox.Header>
                 <CheckBox Content="Transcribe" IsChecked="{Binding CanTranscribe}"/>
             </GroupBox.Header>
@@ -71,5 +61,12 @@
                 <TextBox Grid.Column="1" Text="{Binding TranscribeModelName}" VerticalContentAlignment="Center" IsEnabled="{Binding CanTranscribe}"/>
             </Grid>
         </GroupBox>
+        <Button Grid.Row="3" Command="{Binding ShowMainCommand}" Height="30" Margin="0,10,0,0">
+            <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                    <Path Fill="Black" Data="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </Canvas>
+            </Viewbox>
+        </Button>
     </Grid>
 </UserControl>
