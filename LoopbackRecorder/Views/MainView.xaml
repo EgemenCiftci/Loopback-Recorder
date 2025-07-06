@@ -242,6 +242,9 @@
                             <DataTrigger Binding="{Binding IsChecked, ElementName=RecordingToggle}" Value="True">
                                 <Setter Property="IsEnabled" Value="False"/>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
@@ -275,6 +278,13 @@
                                 <MultiDataTrigger.Conditions>
                                     <Condition Binding="{Binding SelectedRenderDevice.MMDevice}" Value="{x:Null}"/>
                                     <Condition Binding="{Binding SelectedCaptureDevice.MMDevice}" Value="{x:Null}"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Value="True"/>
+                                    <Condition Binding="{Binding IsBusy}" Value="True"/>
                                 </MultiDataTrigger.Conditions>
                                 <Setter Property="IsEnabled" Value="False"/>
                             </MultiDataTrigger>

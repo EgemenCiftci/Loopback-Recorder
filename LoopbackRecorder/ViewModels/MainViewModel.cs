@@ -49,6 +49,14 @@ public class MainViewModel : ObservableObject
         set => SetProperty(ref selectedCaptureDevice, value);
     }
 
+    private bool isBusy = false;
+
+    public bool IsBusy
+    {
+        get => isBusy;
+        set => SetProperty(ref isBusy, value);
+    }
+
     public ICommand StartStopRecordingCommand => new RelayCommand<bool?>(StartStopRecording);
 
     public ICommand ShowSettingsCommand => new RelayCommand(ShowSettings);
@@ -111,6 +119,8 @@ public class MainViewModel : ObservableObject
         {
             if (isChecked == true)
             {
+                IsBusy = true;
+
                 string folderName = $"{DateTime.Now:yyyyMMddHHmmss}";
 
                 if (!Directory.Exists(folderName))
@@ -253,6 +263,10 @@ public class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             logHelper.AppendException(ex, "Error starting/stopping recording");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
