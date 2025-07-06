@@ -113,7 +113,7 @@ public class SettingsViewModel : ObservableObject
         {
             MainView mainView = App.serviceProvider.GetRequiredService<MainView>();
             mainView.DataContext = App.serviceProvider.GetRequiredService<MainViewModel>();
-            Application.Current.MainWindow.Content = mainView;
+            System.Windows.Application.Current.MainWindow.Content = mainView;
         }
         catch (Exception ex)
         {

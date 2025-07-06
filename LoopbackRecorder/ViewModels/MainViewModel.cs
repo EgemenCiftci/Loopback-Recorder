@@ -10,7 +10,6 @@ using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -141,7 +140,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    string convertedFileName = await ConvertToAsync(format, renderFileName);
+                                    await ConvertToAsync(format, renderFileName);
                                 }
                                 else
                                 {
@@ -151,7 +150,7 @@ public class MainViewModel : ObservableObject
 
                             if (Settings.Default.CanTranscribe)
                             {
-                                string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
+                                await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
                             }
                         }
                         catch (Exception ex)
@@ -177,7 +176,7 @@ public class MainViewModel : ObservableObject
 
                     renderCapture.StartRecording();
                     logHelper.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
-                    logHelper.AppendLog($"Selected Render Device: {selectedRenderDevice}");
+                    logHelper.AppendLog($"Selected Render Device: {selectedRenderDevice.FriendlyName}");
                     logHelper.AppendLog($"Render Filename: {renderFileName}");
                     logHelper.AppendLog($"Render Recording started.");
                 }
@@ -203,7 +202,7 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    string convertedFileName = await ConvertToAsync(format, captureFileName);
+                                    await ConvertToAsync(format, captureFileName);
                                 }
                                 else
                                 {
@@ -213,7 +212,7 @@ public class MainViewModel : ObservableObject
 
                             if (Settings.Default.CanTranscribe)
                             {
-                                string transcriptionFileName = await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
+                                await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
                             }
                         }
                         catch (Exception ex)
@@ -239,7 +238,7 @@ public class MainViewModel : ObservableObject
 
                     captureCapture.StartRecording();
                     logHelper.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
-                    logHelper.AppendLog($"Selected Capture Device: {selectedCaptureDevice}");
+                    logHelper.AppendLog($"Selected Capture Device: {selectedCaptureDevice.FriendlyName}");
                     logHelper.AppendLog($"Capture Filename: {captureFileName}");
                     logHelper.AppendLog($"Capture Recording started.");
                 }
@@ -256,7 +255,7 @@ public class MainViewModel : ObservableObject
         }
     }
 
-    private async Task<string> ConvertToAsync(Formats format, string waveFilePath)
+    private async Task ConvertToAsync(Formats format, string waveFilePath)
     {
         logHelper.AppendLog($"Converting to {format} format...");
         using WaveFileReader reader = new(waveFilePath);
@@ -279,7 +278,6 @@ public class MainViewModel : ObservableObject
         }
 
         logHelper.AppendLog($"Success.");
-        return convertedFilePath;
     }
 
     private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)
@@ -325,7 +323,7 @@ public class MainViewModel : ObservableObject
         {
             SettingsView settingsView = App.serviceProvider.GetRequiredService<SettingsView>();
             settingsView.DataContext = App.serviceProvider.GetRequiredService<SettingsViewModel>();
-            Application.Current.MainWindow.Content = settingsView;
+            System.Windows.Application.Current.MainWindow.Content = settingsView;
         }
         catch (Exception ex)
         {

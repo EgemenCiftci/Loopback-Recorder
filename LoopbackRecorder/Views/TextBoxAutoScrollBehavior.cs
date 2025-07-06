@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 namespace LoopbackRecorder.Views;
 
-public class TextBoxAutoScrollBehavior : Behavior<TextBox>
+public class TextBoxAutoScrollBehavior : Behavior<System.Windows.Controls.TextBox>
 {
     protected override void OnAttached()
     {

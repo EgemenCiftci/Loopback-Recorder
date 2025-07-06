@@ -15,7 +15,7 @@ public class LogHelper : ObservableObject
 
     public void AppendLog(string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             Log += $"{DateTime.Now:HH:mm:ss.fff} - {message}\n";
         });

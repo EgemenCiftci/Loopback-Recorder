@@ -13,7 +13,7 @@ public class TranscriptionHelper
 {
     private readonly LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
 
-    public async Task<string> TranscribeWithWhisperAsync(string wavFileName)
+    public async Task TranscribeWithWhisperAsync(string wavFileName)
     {
         GgmlType ggmlType = GgmlType.Base;
         string modelFileName = Settings.Default.TranscribeModelName;
@@ -62,8 +62,6 @@ public class TranscriptionHelper
         await File.WriteAllTextAsync(transcriptionFileName, sb.ToString(), Encoding.UTF8);
 
         logHelper.AppendLog($"Success.");
-
-        return transcriptionFileName;
     }
 
     private async Task DownloadModel(string fileName, GgmlType ggmlType)
