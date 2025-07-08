@@ -105,7 +105,7 @@ public class SettingsViewModel : ObservableObject
         }
     }
 
-    public ICommand ShowMainCommand => new RelayCommand(ShowMain);
+    public ICommand ShowCommand => new RelayCommand(ShowMain);
 
     public void ShowMain()
     {

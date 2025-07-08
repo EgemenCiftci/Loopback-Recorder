@@ -1,8 +1,11 @@
-﻿using System.Windows;
+﻿using LoopbackRecorder.Helpers;
+using MahApps.Metro.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
 
 namespace LoopbackRecorder.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow : MetroWindow
 {
     private readonly NotifyIcon? _notifyIcon;
 

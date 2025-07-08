@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ControlzEx.Theming;
 using LoopbackRecorder.Enums;
 using LoopbackRecorder.Helpers;
 using LoopbackRecorder.Models;
@@ -59,7 +60,7 @@ public class MainViewModel : ObservableObject
 
     public ICommand StartStopRecordingCommand => new RelayCommand<bool?>(StartStopRecording);
 
-    public ICommand ShowSettingsCommand => new RelayCommand(ShowSettings);
+    public ICommand ShowCommand => new RelayCommand(ShowSettings);
 
     private double renderMasterPeakValue;
 

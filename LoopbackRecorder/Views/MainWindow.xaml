@@ -1,8 +1,34 @@
-﻿<Window x:Class="LoopbackRecorder.Views.MainWindow"
+﻿<mah:MetroWindow x:Class="LoopbackRecorder.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:views="clr-namespace:LoopbackRecorder.Views"
+        xmlns:viewModels="clr-namespace:LoopbackRecorder.ViewModels"
+        xmlns:converters="clr-namespace:LoopbackRecorder.Converters"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Loopback Recorder" Height="450" Width="600" WindowStartupLocation="CenterScreen" StateChanged="Window_StateChanged" Icon="/transcribe.ico"/>
-
+        Title="Loopback Recorder" Height="450" Width="600" WindowStartupLocation="CenterScreen" StateChanged="Window_StateChanged" Icon="/transcribe.ico" x:Name="window">
+    <mah:MetroWindow.Resources>
+        <converters:ObjectToTypeConverter x:Key="ottc"/>
+    </mah:MetroWindow.Resources>
+    <mah:MetroWindow.RightWindowCommands>
+        <mah:WindowCommands>
+            <Button x:Name="button" DataContext="{Binding Content.DataContext, ElementName=window}" Command="{Binding ShowCommand}" ToolTip="Settings">
+                <iconPacks:PackIconModern>
+                    <iconPacks:PackIconModern.Style>
+                        <Style TargetType="iconPacks:PackIconModern">
+                            <Setter Property="Kind" Value="Settings"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext, ElementName=button, Converter={StaticResource ottc}}" Value="{x:Type viewModels:SettingsViewModel}">
+                                    <Setter Property="Kind" Value="Home" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </iconPacks:PackIconModern.Style>
+                </iconPacks:PackIconModern>
+            </Button>
+        </mah:WindowCommands>
+    </mah:MetroWindow.RightWindowCommands>
+</mah:MetroWindow>
