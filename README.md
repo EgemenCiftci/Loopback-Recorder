@@ -54,7 +54,7 @@ LoopbackRecorder is a WPF application for Windows that allows you to record audi
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License.  
 
 ## Acknowledgments
 
