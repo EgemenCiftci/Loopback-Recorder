@@ -1,16 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows;
 
 namespace LoopbackRecorder.Helpers;
 
 public class LogHelper : ObservableObject
 {
-    private string? log;
-
     public string? Log
     {
-        get => log;
-        set => SetProperty(ref log, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public void AppendLog(string message)

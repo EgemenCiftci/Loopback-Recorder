@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ControlzEx.Theming;
 using LoopbackRecorder.Enums;
 using LoopbackRecorder.Helpers;
 using LoopbackRecorder.Models;
@@ -26,13 +25,11 @@ public class MainViewModel : ObservableObject
         set => SetProperty(ref renderDevices, value);
     }
 
-    private Device selectedRenderDevice = NoneItem;
-
     public Device SelectedRenderDevice
     {
-        get => selectedRenderDevice;
-        set => SetProperty(ref selectedRenderDevice, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = NoneItem;
 
     private ObservableCollection<Device> captureDevices;
 
@@ -42,51 +39,42 @@ public class MainViewModel : ObservableObject
         set => SetProperty(ref captureDevices, value);
     }
 
-    private Device selectedCaptureDevice = NoneItem;
-
     public Device SelectedCaptureDevice
     {
-        get => selectedCaptureDevice;
-        set => SetProperty(ref selectedCaptureDevice, value);
-    }
-
-    private bool isBusy = false;
+        get;
+        set => SetProperty(ref field, value);
+    } = NoneItem;
 
     public bool IsBusy
     {
-        get => isBusy;
-        set => SetProperty(ref isBusy, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = false;
 
     public ICommand StartStopRecordingCommand => new RelayCommand<bool?>(StartStopRecording);
 
     public ICommand ShowCommand => new RelayCommand(ShowSettings);
 
-    private double renderMasterPeakValue;
-
     public double RenderMasterPeakValue
     {
-        get => renderMasterPeakValue;
-        set => SetProperty(ref renderMasterPeakValue, value);
+        get;
+        set => SetProperty(ref field, value);
     }
-
-    private double captureMasterPeakValue;
 
     public double CaptureMasterPeakValue
     {
-        get => captureMasterPeakValue;
-        set => SetProperty(ref captureMasterPeakValue, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
-    private LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
-    private readonly TranscriptionHelper transcriptionHelper = App.serviceProvider.GetRequiredService<TranscriptionHelper>();
-    private readonly ConversionHelper conversionHelper = App.serviceProvider.GetRequiredService<ConversionHelper>();
-    
-    public LogHelper LogHelper
+    private readonly TranscriptionHelper? transcriptionHelper = App.ServiceProvider?.GetRequiredService<TranscriptionHelper>();
+    private readonly ConversionHelper? conversionHelper = App.ServiceProvider?.GetRequiredService<ConversionHelper>();
+
+    public LogHelper? LogHelper
     {
-        get => logHelper;
-        set => SetProperty(ref logHelper, value);
-    }
+        get;
+        set => SetProperty(ref field, value);
+    } = App.ServiceProvider?.GetRequiredService<LogHelper>();
 
     private WasapiLoopbackCapture? renderCapture;
     private WaveFileWriter? renderWriter;
@@ -104,12 +92,12 @@ public class MainViewModel : ObservableObject
         {
             try
             {
-                RenderMasterPeakValue = selectedRenderDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
-                CaptureMasterPeakValue = selectedCaptureDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
+                RenderMasterPeakValue = SelectedRenderDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
+                CaptureMasterPeakValue = SelectedCaptureDevice?.AudioMeterInformation?.MasterPeakValue ?? 0;
             }
             catch (Exception ex)
             {
-                logHelper.AppendException(ex, "Error updating peak values");
+                LogHelper?.AppendException(ex, "Error updating peak values");
             }
         };
     }
@@ -131,10 +119,10 @@ public class MainViewModel : ObservableObject
 
                 Directory.SetCurrentDirectory(folderName);
 
-                if (selectedRenderDevice.MMDevice != null)
+                if (SelectedRenderDevice.MMDevice != null)
                 {
                     string renderFileName = $"render.wav";
-                    renderCapture = new(selectedRenderDevice.MMDevice);
+                    renderCapture = new(SelectedRenderDevice.MMDevice);
                     renderWriter = new(renderFileName, renderCapture.WaveFormat);
 
                     renderCapture.RecordingStopped += async (s, e) =>
@@ -144,7 +132,7 @@ public class MainViewModel : ObservableObject
                             renderWriter.Dispose();
                             renderCapture.Dispose();
 
-                            logHelper.AppendLog("Render recording stopped.");
+                            LogHelper?.AppendLog("Render recording stopped.");
 
                             if (Settings.Default.CanConvert)
                             {
@@ -152,22 +140,25 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    await conversionHelper.ConvertToAsync(format, renderFileName);
+                                    if (conversionHelper != null)
+                                    {
+                                        await conversionHelper.ConvertToAsync(format, renderFileName);
+                                    }
                                 }
                                 else
                                 {
-                                    logHelper.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                                    LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
                                 }
                             }
 
-                            if (Settings.Default.CanTranscribe)
+                            if (Settings.Default.CanTranscribe && transcriptionHelper != null)
                             {
                                 await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
                             }
                         }
                         catch (Exception ex)
                         {
-                            logHelper.AppendException(ex, "Error during render recording stop");
+                            LogHelper?.AppendException(ex, "Error during render recording stop");
                         }
                     };
 
@@ -182,21 +173,21 @@ public class MainViewModel : ObservableObject
                         }
                         catch (Exception ex)
                         {
-                            logHelper.AppendException(ex, "Error writing render data");
+                            LogHelper?.AppendException(ex, "Error writing render data");
                         }
                     };
 
                     renderCapture.StartRecording();
-                    logHelper.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
-                    logHelper.AppendLog($"Selected Render Device: {selectedRenderDevice.FriendlyName}");
-                    logHelper.AppendLog($"Directory: {folderName}");
-                    logHelper.AppendLog($"Render Recording started.");
+                    LogHelper?.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
+                    LogHelper?.AppendLog($"Selected Render Device: {SelectedRenderDevice.FriendlyName}");
+                    LogHelper?.AppendLog($"Directory: {folderName}");
+                    LogHelper?.AppendLog($"Render Recording started.");
                 }
 
-                if (selectedCaptureDevice.MMDevice != null)
+                if (SelectedCaptureDevice.MMDevice != null)
                 {
                     string captureFileName = $"capture.wav";
-                    captureCapture = new(selectedCaptureDevice.MMDevice);
+                    captureCapture = new(SelectedCaptureDevice.MMDevice);
                     captureWriter = new(captureFileName, captureCapture.WaveFormat);
 
                     captureCapture.RecordingStopped += async (s, e) =>
@@ -206,7 +197,7 @@ public class MainViewModel : ObservableObject
                             captureWriter.Dispose();
                             captureCapture.Dispose();
 
-                            logHelper.AppendLog("Capture recording stopped.");
+                            LogHelper?.AppendLog("Capture recording stopped.");
 
                             if (Settings.Default.CanConvert)
                             {
@@ -214,22 +205,25 @@ public class MainViewModel : ObservableObject
 
                                 if (result)
                                 {
-                                    await conversionHelper.ConvertToAsync(format, captureFileName);
+                                    if (conversionHelper != null)
+                                    {
+                                        await conversionHelper.ConvertToAsync(format, captureFileName);
+                                    }
                                 }
                                 else
                                 {
-                                    logHelper.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                                    LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
                                 }
                             }
 
-                            if (Settings.Default.CanTranscribe)
+                            if (Settings.Default.CanTranscribe && transcriptionHelper != null)
                             {
                                 await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
                             }
                         }
                         catch (Exception ex)
                         {
-                            logHelper.AppendException(ex, "Error during capture recording stop");
+                            LogHelper?.AppendException(ex, "Error during capture recording stop");
                         }
                     };
 
@@ -244,15 +238,15 @@ public class MainViewModel : ObservableObject
                         }
                         catch (Exception ex)
                         {
-                            logHelper.AppendException(ex, "Error writing capture data");
+                            LogHelper?.AppendException(ex, "Error writing capture data");
                         }
                     };
 
                     captureCapture.StartRecording();
-                    logHelper.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
-                    logHelper.AppendLog($"Selected Capture Device: {selectedCaptureDevice.FriendlyName}");
-                    logHelper.AppendLog($"Directory: {folderName}");
-                    logHelper.AppendLog($"Capture Recording started.");
+                    LogHelper?.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
+                    LogHelper?.AppendLog($"Selected Capture Device: {SelectedCaptureDevice.FriendlyName}");
+                    LogHelper?.AppendLog($"Directory: {folderName}");
+                    LogHelper?.AppendLog($"Capture Recording started.");
                 }
             }
             else
@@ -263,7 +257,7 @@ public class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            logHelper.AppendException(ex, "Error starting/stopping recording");
+            LogHelper?.AppendException(ex, "Error starting/stopping recording");
         }
         finally
         {
@@ -312,13 +306,20 @@ public class MainViewModel : ObservableObject
     {
         try
         {
-            SettingsView settingsView = App.serviceProvider.GetRequiredService<SettingsView>();
-            settingsView.DataContext = App.serviceProvider.GetRequiredService<SettingsViewModel>();
+            SettingsView? settingsView = App.ServiceProvider?.GetRequiredService<SettingsView>();
+
+            if (settingsView == null)
+            {
+                LogHelper?.AppendLog("SettingsView service not found.");
+                return;
+            }
+
+            settingsView.DataContext = App.ServiceProvider?.GetRequiredService<SettingsViewModel>();
             System.Windows.Application.Current.MainWindow.Content = settingsView;
         }
         catch (Exception ex)
         {
-            logHelper.AppendException(ex, "Error showing settings.");
+            LogHelper?.AppendException(ex, "Error showing settings.");
         }
     }
 }

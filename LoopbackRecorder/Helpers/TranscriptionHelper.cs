@@ -11,20 +11,20 @@ namespace LoopbackRecorder.Helpers;
 
 public class TranscriptionHelper
 {
-    private readonly LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
+    private readonly LogHelper? logHelper = App.ServiceProvider?.GetRequiredService<LogHelper>();
 
     public async Task TranscribeWithWhisperAsync(string wavFileName)
     {
         if (!File.Exists(wavFileName))
         {
-            logHelper.AppendLog($"Transcribe: File does not exist. {wavFileName}");
+            logHelper?.AppendLog($"Transcribe: File does not exist. {wavFileName}");
             return;
         }
 
-        using var reader0 = new WaveFileReader(wavFileName);
+        using WaveFileReader reader0 = new(wavFileName);
         if (reader0.Length == 0 || reader0.SampleCount == 0)
         {
-            logHelper.AppendLog($"Transcribe: File is empty or has no samples. {wavFileName}");
+            logHelper?.AppendLog($"Transcribe: File is empty or has no samples. {wavFileName}");
             return;
         }
 
@@ -44,11 +44,11 @@ public class TranscriptionHelper
 
         if (!File.Exists(modelFileName))
         {
-            logHelper.AppendLog($"Model file '{modelFileName}' not found.");
+            logHelper?.AppendLog($"Model file '{modelFileName}' not found.");
             await DownloadModel(modelFileName, ggmlType);
         }
 
-        logHelper.AppendLog($"Transcribing...");
+        logHelper?.AppendLog($"Transcribing...");
 
         using MemoryStream modelStream = new();
         using FileStream modelFileStream = File.OpenRead(modelFileName);
@@ -74,15 +74,15 @@ public class TranscriptionHelper
 
         await File.WriteAllTextAsync(transcriptionFileName, sb.ToString(), Encoding.UTF8);
 
-        logHelper.AppendLog($"Success.");
+        logHelper?.AppendLog($"Success.");
     }
 
     private async Task DownloadModel(string fileName, GgmlType ggmlType)
     {
-        logHelper.AppendLog($"Downloading...");
+        logHelper?.AppendLog($"Downloading...");
         using Stream modelStream = await WhisperGgmlDownloader.Default.GetGgmlModelAsync(ggmlType);
         using FileStream fileWriter = File.OpenWrite(fileName);
         await modelStream.CopyToAsync(fileWriter);
-        logHelper.AppendLog($"Success.");
+        logHelper?.AppendLog($"Success.");
     }
 }

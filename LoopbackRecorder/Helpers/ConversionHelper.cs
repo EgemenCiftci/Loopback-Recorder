@@ -7,24 +7,24 @@ namespace LoopbackRecorder.Helpers;
 
 public class ConversionHelper
 {
-    private readonly LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
+    private readonly LogHelper? logHelper = App.ServiceProvider?.GetRequiredService<LogHelper>();
 
     public async Task ConvertToAsync(Formats format, string waveFilePath)
     {
         if (!File.Exists(waveFilePath))
         {
-            logHelper.AppendLog($"Convert: File does not exist. {waveFilePath}");
+            logHelper?.AppendLog($"Convert: File does not exist. {waveFilePath}");
             return;
         }
 
-        using var reader = new WaveFileReader(waveFilePath);
-        if(reader.Length == 0 || reader.SampleCount == 0)
+        using WaveFileReader reader = new(waveFilePath);
+        if (reader.Length == 0 || reader.SampleCount == 0)
         {
-            logHelper.AppendLog($"Convert: File is empty or has no samples. {waveFilePath}");
+            logHelper?.AppendLog($"Convert: File is empty or has no samples. {waveFilePath}");
             return;
         }
 
-        logHelper.AppendLog($"Converting to {format} format...");
+        logHelper?.AppendLog($"Converting to {format} format...");
         string convertedFilePath = waveFilePath;
 
         switch (format)
@@ -43,6 +43,6 @@ public class ConversionHelper
                 break;
         }
 
-        logHelper.AppendLog($"Success.");
+        logHelper?.AppendLog($"Success.");
     }
 }

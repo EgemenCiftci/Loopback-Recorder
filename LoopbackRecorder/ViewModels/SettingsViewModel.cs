@@ -5,105 +5,92 @@ using LoopbackRecorder.Helpers;
 using LoopbackRecorder.Properties;
 using LoopbackRecorder.Views;
 using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
 using System.Windows.Input;
 
 namespace LoopbackRecorder.ViewModels;
 
 public class SettingsViewModel : ObservableObject
 {
-    
-    private readonly LogHelper logHelper = App.serviceProvider.GetRequiredService<LogHelper>();
 
-    private bool canConvert = Settings.Default.CanConvert;
+    private readonly LogHelper? logHelper = App.ServiceProvider?.GetRequiredService<LogHelper>();
 
     public bool CanConvert
     {
-        get => canConvert;
+        get;
         set
         {
-            if (SetProperty(ref canConvert, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.CanConvert = value;
                 Settings.Default.Save();
             }
         }
-    }
-
-    private Formats convertFormat = Enum.Parse<Formats>(Settings.Default.ConvertFormat);
+    } = Settings.Default.CanConvert;
 
     public Formats ConvertFormat
     {
-        get => convertFormat;
+        get;
         set
         {
-            if (SetProperty(ref convertFormat, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.ConvertFormat = value.ToString();
                 Settings.Default.Save();
             }
         }
-    }
-
-    private bool canRemoveSilence = Settings.Default.CanRemoveSilence;
+    } = Enum.Parse<Formats>(Settings.Default.ConvertFormat);
 
     public bool CanRemoveSilence
     {
-        get => canRemoveSilence;
+        get;
         set
         {
-            if (SetProperty(ref canRemoveSilence, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.CanRemoveSilence = value;
                 Settings.Default.Save();
             }
         }
-    }
-
-    private float silenceThreshold = Settings.Default.SilenceThreshold;
+    } = Settings.Default.CanRemoveSilence;
 
     public float SilenceThreshold
     {
-        get => silenceThreshold;
+        get;
         set
         {
-            if (SetProperty(ref silenceThreshold, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.SilenceThreshold = value;
                 Settings.Default.Save();
             }
         }
-    }
-
-    private bool canTranscribe = Settings.Default.CanTranscribe;
+    } = Settings.Default.SilenceThreshold;
 
     public bool CanTranscribe
     {
-        get => canTranscribe;
+        get;
         set
         {
-            if (SetProperty(ref canTranscribe, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.CanTranscribe = value;
                 Settings.Default.Save();
             }
         }
-    }
-
-    private string transcribeModelName = Settings.Default.TranscribeModelName;
+    } = Settings.Default.CanTranscribe;
 
     public string TranscribeModelName
     {
-        get => transcribeModelName;
+        get;
         set
         {
-            if (SetProperty(ref transcribeModelName, value))
+            if (SetProperty(ref field, value))
             {
                 Settings.Default.TranscribeModelName = value;
                 Settings.Default.Save();
             }
         }
-    }
+    } = Settings.Default.TranscribeModelName;
 
     public ICommand ShowCommand => new RelayCommand(ShowMain);
 
@@ -111,13 +98,20 @@ public class SettingsViewModel : ObservableObject
     {
         try
         {
-            MainView mainView = App.serviceProvider.GetRequiredService<MainView>();
-            mainView.DataContext = App.serviceProvider.GetRequiredService<MainViewModel>();
+            MainView? mainView = App.ServiceProvider?.GetRequiredService<MainView>();
+
+            if (mainView == null)
+            {
+                logHelper?.AppendLog("Main view is null.");
+                return;
+            }
+
+            mainView.DataContext = App.ServiceProvider?.GetRequiredService<MainViewModel>();
             System.Windows.Application.Current.MainWindow.Content = mainView;
         }
         catch (Exception ex)
         {
-            logHelper.AppendException(ex, "Error showing main.");
+            logHelper?.AppendException(ex, "Error showing main.");
         }
     }
 }

@@ -8,18 +8,18 @@ namespace LoopbackRecorder;
 
 public partial class App : System.Windows.Application
 {
-    public static IServiceProvider serviceProvider;
+    public static IServiceProvider? ServiceProvider { get; private set; }
 
     private void Application_Startup(object sender, StartupEventArgs e)
     {
         ServiceCollection serviceCollection = new();
         ConfigureServices(serviceCollection);
 
-        serviceProvider = serviceCollection.BuildServiceProvider();
+        ServiceProvider = serviceCollection.BuildServiceProvider();
 
-        MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
-        MainView mainView = serviceProvider.GetRequiredService<MainView>();
-        mainView.DataContext = serviceProvider.GetRequiredService<MainViewModel>();
+        MainWindow mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+        MainView mainView = ServiceProvider.GetRequiredService<MainView>();
+        mainView.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
         mainWindow.Content = mainView;
         mainWindow.Show();
     }

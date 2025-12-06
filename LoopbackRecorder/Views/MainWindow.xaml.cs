@@ -1,6 +1,4 @@
-﻿using LoopbackRecorder.Helpers;
-using MahApps.Metro.Controls;
-using Microsoft.Extensions.DependencyInjection;
+﻿using MahApps.Metro.Controls;
 using System.Windows;
 
 namespace LoopbackRecorder.Views;
@@ -43,10 +41,7 @@ public partial class MainWindow : MetroWindow
         {
             Hide();
 
-            if (_notifyIcon != null)
-            {
-                _notifyIcon.Visible = true;
-            }
+            _ = _notifyIcon?.Visible = true;
         }
         else if (WindowState == WindowState.Normal && _notifyIcon != null)
         {
