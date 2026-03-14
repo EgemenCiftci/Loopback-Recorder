@@ -15,7 +15,7 @@ using System.Windows.Threading;
 
 namespace LoopbackRecorder.ViewModels;
 
-public class MainViewModel : ObservableObject
+public class MainViewModel : ObservableObject, IDisposable
 {
     private ObservableCollection<Device> renderDevices;
 
@@ -81,6 +81,7 @@ public class MainViewModel : ObservableObject
     private WasapiCapture? captureCapture;
     private WaveFileWriter? captureWriter;
     private static readonly Device NoneItem = new(null);
+    private readonly DispatcherTimer? peakValueTimer;
 
     public MainViewModel()
     {
@@ -88,7 +89,8 @@ public class MainViewModel : ObservableObject
         renderDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).Select(x => new Device(x))];
         captureDevices = [NoneItem, .. deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active).Select(x => new Device(x))];
 
-        new DispatcherTimer(DispatcherPriority.Background) { IsEnabled = true, Interval = TimeSpan.FromMilliseconds(100) }.Tick += (s, e) =>
+        peakValueTimer = new DispatcherTimer(DispatcherPriority.Background) { IsEnabled = true, Interval = TimeSpan.FromMilliseconds(100) };
+        peakValueTimer.Tick += (s, e) =>
         {
             try
             {
@@ -108,151 +110,18 @@ public class MainViewModel : ObservableObject
         {
             if (isChecked == true)
             {
+                if (IsBusy)
+                {
+                    LogHelper?.AppendLog("Recording already in progress.");
+                    return;
+                }
+
                 IsBusy = true;
-
-                string folderName = $"{DateTime.Now:yyyyMMddHHmmss}";
-
-                if (!Directory.Exists(folderName))
-                {
-                    _ = Directory.CreateDirectory(folderName);
-                }
-
-                Directory.SetCurrentDirectory(folderName);
-
-                if (SelectedRenderDevice.MMDevice != null)
-                {
-                    string renderFileName = $"render.wav";
-                    renderCapture = new(SelectedRenderDevice.MMDevice);
-                    renderWriter = new(renderFileName, renderCapture.WaveFormat);
-
-                    renderCapture.RecordingStopped += async (s, e) =>
-                    {
-                        try
-                        {
-                            renderWriter.Dispose();
-                            renderCapture.Dispose();
-
-                            LogHelper?.AppendLog("Render recording stopped.");
-
-                            if (Settings.Default.CanConvert)
-                            {
-                                bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
-
-                                if (result)
-                                {
-                                    if (conversionHelper != null)
-                                    {
-                                        await conversionHelper.ConvertToAsync(format, renderFileName);
-                                    }
-                                }
-                                else
-                                {
-                                    LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
-                                }
-                            }
-
-                            if (Settings.Default.CanTranscribe && transcriptionHelper != null)
-                            {
-                                await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper?.AppendException(ex, "Error during render recording stop");
-                        }
-                    };
-
-                    renderCapture.DataAvailable += (s, e) =>
-                    {
-                        try
-                        {
-                            if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat)))
-                            {
-                                renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper?.AppendException(ex, "Error writing render data");
-                        }
-                    };
-
-                    renderCapture.StartRecording();
-                    LogHelper?.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
-                    LogHelper?.AppendLog($"Selected Render Device: {SelectedRenderDevice.FriendlyName}");
-                    LogHelper?.AppendLog($"Directory: {folderName}");
-                    LogHelper?.AppendLog($"Render Recording started.");
-                }
-
-                if (SelectedCaptureDevice.MMDevice != null)
-                {
-                    string captureFileName = $"capture.wav";
-                    captureCapture = new(SelectedCaptureDevice.MMDevice);
-                    captureWriter = new(captureFileName, captureCapture.WaveFormat);
-
-                    captureCapture.RecordingStopped += async (s, e) =>
-                    {
-                        try
-                        {
-                            captureWriter.Dispose();
-                            captureCapture.Dispose();
-
-                            LogHelper?.AppendLog("Capture recording stopped.");
-
-                            if (Settings.Default.CanConvert)
-                            {
-                                bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
-
-                                if (result)
-                                {
-                                    if (conversionHelper != null)
-                                    {
-                                        await conversionHelper.ConvertToAsync(format, captureFileName);
-                                    }
-                                }
-                                else
-                                {
-                                    LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
-                                }
-                            }
-
-                            if (Settings.Default.CanTranscribe && transcriptionHelper != null)
-                            {
-                                await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper?.AppendException(ex, "Error during capture recording stop");
-                        }
-                    };
-
-                    captureCapture.DataAvailable += (s, e) =>
-                    {
-                        try
-                        {
-                            if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat)))
-                            {
-                                captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper?.AppendException(ex, "Error writing capture data");
-                        }
-                    };
-
-                    captureCapture.StartRecording();
-                    LogHelper?.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
-                    LogHelper?.AppendLog($"Selected Capture Device: {SelectedCaptureDevice.FriendlyName}");
-                    LogHelper?.AppendLog($"Directory: {folderName}");
-                    LogHelper?.AppendLog($"Capture Recording started.");
-                }
+                StartRecording();
             }
             else
             {
-                renderCapture?.StopRecording();
-                captureCapture?.StopRecording();
+                StopRecording();
             }
         }
         catch (Exception ex)
@@ -265,12 +134,160 @@ public class MainViewModel : ObservableObject
         }
     }
 
+    private void StartRecording()
+    {
+        string folderName = $"{DateTime.Now:yyyyMMddHHmmss}";
+
+        if (!Directory.Exists(folderName))
+        {
+            _ = Directory.CreateDirectory(folderName);
+        }
+
+        Directory.SetCurrentDirectory(folderName);
+
+        if (SelectedRenderDevice.MMDevice != null)
+        {
+            string renderFileName = $"render.wav";
+            renderCapture = new(SelectedRenderDevice.MMDevice);
+            renderWriter = new(renderFileName, renderCapture.WaveFormat);
+
+            renderCapture.RecordingStopped += async (s, e) =>
+            {
+                try
+                {
+                    renderWriter.Dispose();
+                    renderCapture.Dispose();
+
+                    LogHelper?.AppendLog("Render recording stopped.");
+
+                    if (Settings.Default.CanConvert)
+                    {
+                        bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
+
+                        if (result)
+                        {
+                            if (conversionHelper != null)
+                            {
+                                await conversionHelper.ConvertToAsync(format, renderFileName);
+                            }
+                        }
+                        else
+                        {
+                            LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                        }
+                    }
+
+                    if (Settings.Default.CanTranscribe && transcriptionHelper != null)
+                    {
+                        await transcriptionHelper.TranscribeWithWhisperAsync(renderFileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper?.AppendException(ex, "Error during render recording stop");
+                }
+            };
+
+            renderCapture.DataAvailable += (s, e) =>
+            {
+                try
+                {
+                    if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat)))
+                    {
+                        renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper?.AppendException(ex, "Error writing render data");
+                }
+            };
+
+            renderCapture.StartRecording();
+            LogHelper?.AppendLog($"Render Wave Format: {renderCapture.WaveFormat}");
+            LogHelper?.AppendLog($"Selected Render Device: {SelectedRenderDevice.FriendlyName}");
+            LogHelper?.AppendLog($"Directory: {folderName}");
+            LogHelper?.AppendLog($"Render Recording started.");
+        }
+
+        if (SelectedCaptureDevice.MMDevice != null)
+        {
+            string captureFileName = $"capture.wav";
+            captureCapture = new(SelectedCaptureDevice.MMDevice);
+            captureWriter = new(captureFileName, captureCapture.WaveFormat);
+
+            captureCapture.RecordingStopped += async (s, e) =>
+            {
+                try
+                {
+                    captureWriter.Dispose();
+                    captureCapture.Dispose();
+
+                    LogHelper?.AppendLog("Capture recording stopped.");
+
+                    if (Settings.Default.CanConvert)
+                    {
+                        bool result = Enum.TryParse(Settings.Default.ConvertFormat, true, out Formats format);
+
+                        if (result)
+                        {
+                            if (conversionHelper != null)
+                            {
+                                await conversionHelper.ConvertToAsync(format, captureFileName);
+                            }
+                        }
+                        else
+                        {
+                            LogHelper?.AppendLog($"Invalid convert format: {Settings.Default.ConvertFormat}. Skipping...");
+                        }
+                    }
+
+                    if (Settings.Default.CanTranscribe && transcriptionHelper != null)
+                    {
+                        await transcriptionHelper.TranscribeWithWhisperAsync(captureFileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper?.AppendException(ex, "Error during capture recording stop");
+                }
+            };
+
+            captureCapture.DataAvailable += (s, e) =>
+            {
+                try
+                {
+                    if (!Settings.Default.CanRemoveSilence || (Settings.Default.CanRemoveSilence && !IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat)))
+                    {
+                        captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper?.AppendException(ex, "Error writing capture data");
+                }
+            };
+
+            captureCapture.StartRecording();
+            LogHelper?.AppendLog($"Capture Wave Format: {captureCapture.WaveFormat}");
+            LogHelper?.AppendLog($"Selected Capture Device: {SelectedCaptureDevice.FriendlyName}");
+            LogHelper?.AppendLog($"Directory: {folderName}");
+            LogHelper?.AppendLog($"Capture Recording started.");
+        }
+    }
+
+    private void StopRecording()
+    {
+        renderCapture?.StopRecording();
+        captureCapture?.StopRecording();
+    }
+
     private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)
     {
         int bytesPerSample = format.BitsPerSample / 8;
-        int samples = bytesRecorded / bytesPerSample;
+        int sampleCount = bytesRecorded / bytesPerSample;
 
-        if (samples == 0)
+        if (sampleCount == 0)
         {
             return true;
         }
@@ -279,25 +296,26 @@ public class MainViewModel : ObservableObject
 
         for (int i = 0; i < bytesRecorded; i += bytesPerSample)
         {
+            int bufferIndex = i;
             float sample = 0;
 
             if (format.BitsPerSample == 16)
             {
-                sample = BitConverter.ToInt16(buffer, i) / 32768f;
+                sample = BitConverter.ToInt16(buffer, bufferIndex) / 32768f;
             }
             else if (format.BitsPerSample == 32)
             {
-                sample = BitConverter.ToInt32(buffer, i) / 2147483648f;
+                sample = BitConverter.ToInt32(buffer, bufferIndex) / 2147483648f;
             }
             else if (format.BitsPerSample == 8)
             {
-                sample = (buffer[i] - 128) / 128f;
+                sample = (buffer[bufferIndex] - 128) / 128f;
             }
 
             sumSquares += sample * sample;
         }
 
-        double rms = Math.Sqrt(sumSquares / samples);
+        double rms = Math.Sqrt(sumSquares / sampleCount);
 
         return rms < Settings.Default.SilenceThreshold;
     }
@@ -321,5 +339,37 @@ public class MainViewModel : ObservableObject
         {
             LogHelper?.AppendException(ex, "Error showing settings.");
         }
+    }
+
+    private bool disposed = false;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                peakValueTimer?.Stop();
+                renderCapture?.StopRecording();
+                captureCapture?.StopRecording();
+
+                renderWriter?.Dispose();
+                captureWriter?.Dispose();
+                renderCapture?.Dispose();
+                captureCapture?.Dispose();
+            }
+            disposed = true;
+        }
+    }
+
+    ~MainViewModel()
+    {
+        Dispose(false);
     }
 }
