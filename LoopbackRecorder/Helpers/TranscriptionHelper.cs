@@ -1,5 +1,4 @@
 using LoopbackRecorder.Properties;
-using Microsoft.Extensions.DependencyInjection;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System.IO;
@@ -9,54 +8,56 @@ using Whisper.net.Ggml;
 
 namespace LoopbackRecorder.Helpers;
 
-public class TranscriptionHelper
+public class TranscriptionHelper(LogHelper logHelper)
 {
-    private readonly LogHelper? logHelper = App.ServiceProvider?.GetRequiredService<LogHelper>();
+    private static readonly SemaphoreSlim modelDownloadSemaphore = new(1, 1);
 
     public async Task TranscribeWithWhisperAsync(string wavFileName)
     {
         if (!File.Exists(wavFileName))
         {
-            logHelper?.AppendLog($"Transcribe: File does not exist. {wavFileName}");
+            logHelper.AppendLog($"Transcribe: File does not exist. {wavFileName}");
             return;
         }
 
         using WaveFileReader reader0 = new(wavFileName);
         if (reader0.Length == 0 || reader0.SampleCount == 0)
         {
-            logHelper?.AppendLog($"Transcribe: File is empty or has no samples. {wavFileName}");
+            logHelper.AppendLog($"Transcribe: File is empty or has no samples. {wavFileName}");
             return;
         }
 
         GgmlType ggmlType = GgmlType.Base;
         string modelFileName = Settings.Default.TranscribeModelName;
-        string transcriptionFileName = wavFileName.Replace(".wav", ".txt", StringComparison.InvariantCultureIgnoreCase);
+        string transcriptionFileName = Path.ChangeExtension(wavFileName, ".txt");
 
-        string currentDirectory = Directory.GetCurrentDirectory();
-        string modelsPath = Path.GetFullPath(Path.Combine(currentDirectory, "..", "models"));
+        string recordingDir = Path.GetDirectoryName(wavFileName)!;
+        string modelsPath = Path.GetFullPath(Path.Combine(recordingDir, "..", "models"));
 
         if (!Directory.Exists(modelsPath))
         {
             _ = Directory.CreateDirectory(modelsPath);
         }
 
-        Directory.SetCurrentDirectory(modelsPath);
+        string modelFilePath = Path.Combine(modelsPath, modelFileName);
 
-        if (!File.Exists(modelFileName))
+        await modelDownloadSemaphore.WaitAsync();
+        try
         {
-            logHelper?.AppendLog($"Model file '{modelFileName}' not found.");
-            await DownloadModel(modelFileName, ggmlType);
+            if (!File.Exists(modelFilePath))
+            {
+                logHelper.AppendLog($"Model file '{modelFileName}' not found.");
+                await DownloadModel(modelFilePath, ggmlType);
+            }
+        }
+        finally
+        {
+            _ = modelDownloadSemaphore.Release();
         }
 
-        logHelper?.AppendLog($"Transcribing...");
+        logHelper.AppendLog($"Transcribing...");
 
-        using MemoryStream modelStream = new();
-        using FileStream modelFileStream = File.OpenRead(modelFileName);
-        await modelFileStream.CopyToAsync(modelStream);
-
-        Directory.SetCurrentDirectory(currentDirectory);
-
-        using WhisperFactory whisperFactory = WhisperFactory.FromBuffer(modelStream.ToArray());
+        using WhisperFactory whisperFactory = WhisperFactory.FromPath(modelFilePath);
         using WhisperProcessor processor = whisperFactory.CreateBuilder().WithLanguage("auto").Build();
         using FileStream fileStream = File.OpenRead(wavFileName);
         using MemoryStream wavStream = new();
@@ -74,15 +75,15 @@ public class TranscriptionHelper
 
         await File.WriteAllTextAsync(transcriptionFileName, sb.ToString(), Encoding.UTF8);
 
-        logHelper?.AppendLog($"Success.");
+        logHelper.AppendLog($"Success.");
     }
 
-    private async Task DownloadModel(string fileName, GgmlType ggmlType)
+    private async Task DownloadModel(string filePath, GgmlType ggmlType)
     {
-        logHelper?.AppendLog($"Downloading...");
+        logHelper.AppendLog($"Downloading...");
         using Stream modelStream = await WhisperGgmlDownloader.Default.GetGgmlModelAsync(ggmlType);
-        using FileStream fileWriter = File.OpenWrite(fileName);
+        using FileStream fileWriter = File.OpenWrite(filePath);
         await modelStream.CopyToAsync(fileWriter);
-        logHelper?.AppendLog($"Success.");
+        logHelper.AppendLog($"Success.");
     }
 }

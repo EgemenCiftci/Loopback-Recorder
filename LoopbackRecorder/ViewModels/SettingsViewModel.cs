@@ -9,10 +9,8 @@ using System.Windows.Input;
 
 namespace LoopbackRecorder.ViewModels;
 
-public class SettingsViewModel : ObservableObject
+public class SettingsViewModel(LogHelper logHelper) : ObservableObject
 {
-
-    private readonly LogHelper? logHelper = App.ServiceProvider?.GetRequiredService<LogHelper>();
 
     public bool CanConvert
     {
@@ -102,7 +100,7 @@ public class SettingsViewModel : ObservableObject
 
             if (mainView == null)
             {
-                logHelper?.AppendLog("Main view is null.");
+                logHelper.AppendLog("Main view is null.");
                 return;
             }
 
@@ -111,7 +109,7 @@ public class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            logHelper?.AppendException(ex, "Error showing main.");
+            logHelper.AppendException(ex, "Error showing main.");
         }
     }
 }

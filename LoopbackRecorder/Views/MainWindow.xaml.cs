@@ -20,6 +20,8 @@ public partial class MainWindow : MetroWindow
             Text = "Loopback Recorder"
         };
 
+        iconStream?.Dispose();
+
         ContextMenuStrip trayMenu = new();
         _ = trayMenu.Items.Add("Exit", null, (s, e) => System.Windows.Application.Current.Shutdown());
 
@@ -47,5 +49,11 @@ public partial class MainWindow : MetroWindow
         {
             _notifyIcon.Visible = false;
         }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _notifyIcon?.Dispose();
+        base.OnClosed(e);
     }
 }
