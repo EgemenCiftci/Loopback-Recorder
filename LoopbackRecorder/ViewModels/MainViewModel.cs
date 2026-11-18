@@ -72,9 +72,9 @@ public class MainViewModel : ObservableObject, IDisposable
 
     public LogHelper LogHelper { get; }
 
-    private WasapiLoopbackCapture? renderCapture;
+    private WasapiRecorder? renderCapture;
     private WaveFileWriter? renderWriter;
-    private WasapiCapture? captureCapture;
+    private WasapiRecorder? captureCapture;
     private WaveFileWriter? captureWriter;
     private static readonly Device NoneItem = new(null);
     private readonly DispatcherTimer? peakValueTimer;
@@ -143,7 +143,10 @@ public class MainViewModel : ObservableObject, IDisposable
         if (SelectedRenderDevice.MMDevice != null)
         {
             string renderFileName = Path.Combine(folderPath, "render.wav");
-            renderCapture = new(SelectedRenderDevice.MMDevice);
+            renderCapture = new WasapiRecorderBuilder()
+                .WithDevice(SelectedRenderDevice.MMDevice)
+                .WithLoopbackCapture()
+                .Build();
             renderWriter = new(renderFileName, renderCapture.WaveFormat);
 
             renderCapture.RecordingStopped += async (s, e) =>
@@ -182,13 +185,13 @@ public class MainViewModel : ObservableObject, IDisposable
                 }
             };
 
-            renderCapture.DataAvailable += (s, e) =>
+            renderCapture.DataAvailable += (buffer, _, _, _) =>
             {
                 try
                 {
-                    if (!Settings.Default.CanRemoveSilence || !IsSilent(e.Buffer, e.BytesRecorded, renderCapture.WaveFormat))
+                    if (!Settings.Default.CanRemoveSilence || !IsSilent(buffer, renderCapture.WaveFormat))
                     {
-                        renderWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        renderWriter.Write(buffer);
                     }
                 }
                 catch (Exception ex)
@@ -207,7 +210,9 @@ public class MainViewModel : ObservableObject, IDisposable
         if (SelectedCaptureDevice.MMDevice != null)
         {
             string captureFileName = Path.Combine(folderPath, "capture.wav");
-            captureCapture = new(SelectedCaptureDevice.MMDevice);
+            captureCapture = new WasapiRecorderBuilder()
+                .WithDevice(SelectedCaptureDevice.MMDevice)
+                .Build();
             captureWriter = new(captureFileName, captureCapture.WaveFormat);
 
             captureCapture.RecordingStopped += async (s, e) =>
@@ -246,13 +251,13 @@ public class MainViewModel : ObservableObject, IDisposable
                 }
             };
 
-            captureCapture.DataAvailable += (s, e) =>
+            captureCapture.DataAvailable += (buffer, _, _, _) =>
             {
                 try
                 {
-                    if (!Settings.Default.CanRemoveSilence || !IsSilent(e.Buffer, e.BytesRecorded, captureCapture.WaveFormat))
+                    if (!Settings.Default.CanRemoveSilence || !IsSilent(buffer, captureCapture.WaveFormat))
                     {
-                        captureWriter.Write(e.Buffer, 0, e.BytesRecorded);
+                        captureWriter.Write(buffer);
                     }
                 }
                 catch (Exception ex)
@@ -275,10 +280,10 @@ public class MainViewModel : ObservableObject, IDisposable
         captureCapture?.StopRecording();
     }
 
-    private static bool IsSilent(byte[] buffer, int bytesRecorded, WaveFormat format)
+    private static bool IsSilent(ReadOnlySpan<byte> buffer, WaveFormat format)
     {
         int bytesPerSample = format.BitsPerSample / 8;
-        int sampleCount = bytesRecorded / bytesPerSample;
+        int sampleCount = buffer.Length / bytesPerSample;
 
         if (sampleCount == 0)
         {
@@ -287,22 +292,22 @@ public class MainViewModel : ObservableObject, IDisposable
 
         double sumSquares = 0;
 
-        for (int i = 0; i < bytesRecorded; i += bytesPerSample)
+        for (int i = 0; i < buffer.Length; i += bytesPerSample)
         {
             int bufferIndex = i;
             float sample = 0;
 
             if (format.Encoding == WaveFormatEncoding.IeeeFloat && format.BitsPerSample == 32)
             {
-                sample = BitConverter.ToSingle(buffer, bufferIndex);
+                sample = BitConverter.ToSingle(buffer.Slice(bufferIndex, 4));
             }
             else if (format.BitsPerSample == 16)
             {
-                sample = BitConverter.ToInt16(buffer, bufferIndex) / 32768f;
+                sample = BitConverter.ToInt16(buffer.Slice(bufferIndex, 2)) / 32768f;
             }
             else if (format.BitsPerSample == 32)
             {
-                sample = BitConverter.ToInt32(buffer, bufferIndex) / 2147483648f;
+                sample = BitConverter.ToInt32(buffer.Slice(bufferIndex, 4)) / 2147483648f;
             }
             else if (format.BitsPerSample == 8)
             {
