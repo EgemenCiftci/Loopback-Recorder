@@ -15,7 +15,7 @@ using System.Windows.Threading;
 
 namespace LoopbackRecorder.ViewModels;
 
-public class MainViewModel : ObservableObject, IDisposable
+public partial class MainViewModel : ObservableObject, IDisposable
 {
     private ObservableCollection<Device> renderDevices;
 
@@ -25,11 +25,8 @@ public class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref renderDevices, value);
     }
 
-    public Device SelectedRenderDevice
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = NoneItem;
+    [ObservableProperty]
+    public partial Device SelectedRenderDevice { get; set; } = NoneItem;
 
     private ObservableCollection<Device> captureDevices;
 
@@ -39,33 +36,21 @@ public class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref captureDevices, value);
     }
 
-    public Device SelectedCaptureDevice
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = NoneItem;
+    [ObservableProperty]
+    public partial Device SelectedCaptureDevice { get; set; } = NoneItem;
 
-    public bool IsBusy
-    {
-        get;
-        set => SetProperty(ref field, value);
-    } = false;
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; } = false;
 
     public ICommand StartStopRecordingCommand { get; }
 
     public ICommand ShowCommand { get; }
 
-    public double RenderMasterPeakValue
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
+    [ObservableProperty]
+    public partial double RenderMasterPeakValue { get; set; }
 
-    public double CaptureMasterPeakValue
-    {
-        get;
-        set => SetProperty(ref field, value);
-    }
+    [ObservableProperty]
+    public partial double CaptureMasterPeakValue { get; set; }
 
     private readonly TranscriptionHelper transcriptionHelper;
     private readonly ConversionHelper conversionHelper;

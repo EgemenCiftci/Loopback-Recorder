@@ -2,11 +2,11 @@
 
 namespace LoopbackRecorder.Models;
 
-public class Device(MMDevice? mmDevice) : IDisposable
+public sealed class Device(MMDevice? mmDevice) : IDisposable
 {
     public MMDevice? MMDevice => mmDevice;
 
-    public AudioClient? AudioClient => MMDevice?.AudioClient;
+    public AudioClient? AudioClient => MMDevice?.CreateAudioClient();
 
     public AudioMeterInformation? AudioMeterInformation => MMDevice?.AudioMeterInformation;
 
