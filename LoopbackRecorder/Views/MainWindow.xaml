@@ -9,7 +9,7 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Loopback Recorder" Height="450" Width="600" WindowStartupLocation="CenterScreen" StateChanged="Window_StateChanged" Icon="/transcribe.ico" x:Name="window">
+        Title="Loopback Recorder" Height="620" Width="780" MinHeight="520" MinWidth="680" WindowStartupLocation="CenterScreen" StateChanged="Window_StateChanged" Icon="/transcribe.ico" x:Name="window">
     <mah:MetroWindow.Resources>
         <converters:ObjectToTypeConverter x:Key="ottc"/>
     </mah:MetroWindow.Resources>
